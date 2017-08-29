@@ -93,6 +93,7 @@ script:
   - opt_enable_adv FWRETRACT
   - opt_set ABL_GRID_POINTS_X 16
   - opt_set ABL_GRID_POINTS_Y 16
+  - opt_set_adv FANMUX0_PIN 53
   - build_marlin
   #
   # Test a simple build of AUTO_BED_LEVELING_UBL
@@ -114,6 +115,7 @@ script:
   #
   - restore_configs
   - opt_enable NUM_SERVOS Z_ENDSTOP_SERVO_NR Z_SERVO_ANGLES DEACTIVATE_SERVOS_AFTER_MOVE
+  - opt_set NUM_SERVOS 1
   - opt_enable AUTO_BED_LEVELING_3POINT DEBUG_LEVELING_FEATURE EEPROM_SETTINGS EEPROM_CHITCHAT
   - opt_enable_adv EXTENDED_CAPABILITIES_REPORT AUTO_REPORT_TEMPERATURES AUTOTEMP G38_PROBE_TARGET
   - build_marlin
