@@ -350,10 +350,10 @@
 
   // If you are using a pre-configured hotend then you can use one of the value sets by uncommenting it
 
-  //HD CR-10 Stock Hotend on 13V
-  #define  DEFAULT_Kp 14.04
-  #define  DEFAULT_Ki 0.83
-  #define  DEFAULT_Kd 59.22
+  //HD CR-10 Stock Hotend 13V
+  #define  DEFAULT_Kp 15.45
+  #define  DEFAULT_Ki 0.93
+  #define  DEFAULT_Kd 64.25
 
   //HD CR-10 Stock Values
   //#define  DEFAULT_Kp 21.73
@@ -394,7 +394,7 @@
 // If your configuration is significantly different than this and you don't understand the issues involved, you probably
 // shouldn't use bed PID until someone else verifies your hardware works.
 // If this is enabled, find your own PID constants below.
-//#define PIDTEMPBED
+#define PIDTEMPBED
 
 //#define BED_LIMIT_SWITCHING
 
@@ -409,9 +409,12 @@
   //#define PID_BED_DEBUG // Sends debug data to the serial port.
 
   //HD CR-10 Stock Bed on 13V
-  #define  DEFAULT_bedKp 542.97
-  #define  DEFAULT_bedKi 65.62
-  #define  DEFAULT_bedKd 1123.14
+  //#define  DEFAULT_bedKp 542.97
+  //#define  DEFAULT_bedKi 65.62
+  //#define  DEFAULT_bedKd 1123.14
+  #define  DEFAULT_bedKp 491.67
+  #define  DEFAULT_bedKi 58.84
+  #define  DEFAULT_bedKd 1027.10
 
   //Stock CR-10 Bed Tuned for 70C
   //#define  DEFAULT_bedKp 426.68
