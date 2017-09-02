@@ -351,9 +351,9 @@
   // If you are using a pre-configured hotend then you can use one of the value sets by uncommenting it
 
   //HD CR-10 Stock Hotend on 13V
-  #define  DEFAULT_Kp 14.14
-  #define  DEFAULT_Ki 0.85
-  #define  DEFAULT_Kd 58.47
+  #define  DEFAULT_Kp 14.04
+  #define  DEFAULT_Ki 0.83
+  #define  DEFAULT_Kd 59.22
 
   //HD CR-10 Stock Values
   //#define  DEFAULT_Kp 21.73
