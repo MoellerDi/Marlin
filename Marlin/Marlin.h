@@ -297,7 +297,7 @@ extern float soft_endstop_min[XYZ], soft_endstop_max[XYZ];
 #endif
 
 #if ENABLED(DELTA)
-  extern float endstop_adj[ABC],
+  extern float delta_endstop_adj[ABC],
                delta_radius,
                delta_diagonal_rod,
                delta_calibration_radius,
@@ -323,7 +323,6 @@ extern float soft_endstop_min[XYZ], soft_endstop_max[XYZ];
 
 #if HAS_LEVELING
   bool leveling_is_valid();
-  bool leveling_is_active();
   void set_bed_leveling_enabled(const bool enable=true);
   void reset_bed_level();
 #endif
@@ -332,6 +331,12 @@ extern float soft_endstop_min[XYZ], soft_endstop_max[XYZ];
   void set_z_fade_height(const float zfh);
 #endif
 
+#if ENABLED(X_DUAL_ENDSTOPS)
+  extern float x_endstop_adj;
+#endif
+#if ENABLED(Y_DUAL_ENDSTOPS)
+  extern float y_endstop_adj;
+#endif
 #if ENABLED(Z_DUAL_ENDSTOPS)
   extern float z_endstop_adj;
 #endif
@@ -355,6 +360,10 @@ extern float soft_endstop_min[XYZ], soft_endstop_max[XYZ];
 
 #if FAN_COUNT > 0
   extern int16_t fanSpeeds[FAN_COUNT];
+  #if ENABLED(EXTRA_FAN_SPEED)
+    extern int16_t old_fanSpeeds[FAN_COUNT],
+                   new_fanSpeeds[FAN_COUNT];
+  #endif
   #if ENABLED(PROBING_FANS_OFF)
     extern bool fans_paused;
     extern int16_t paused_fanSpeeds[FAN_COUNT];
@@ -422,7 +431,15 @@ void do_blocking_move_to_x(const float &x, const float &fr_mm_s=0.0);
 void do_blocking_move_to_z(const float &z, const float &fr_mm_s=0.0);
 void do_blocking_move_to_xy(const float &x, const float &y, const float &fr_mm_s=0.0);
 
-#define HAS_AXIS_UNHOMED_ERR (ENABLED(Z_PROBE_ALLEN_KEY) || ENABLED(Z_PROBE_SLED) || HAS_PROBING_PROCEDURE || HOTENDS > 1 || ENABLED(NOZZLE_CLEAN_FEATURE) || ENABLED(NOZZLE_PARK_FEATURE) || (ENABLED(ADVANCED_PAUSE_FEATURE) && ENABLED(HOME_BEFORE_FILAMENT_CHANGE)))
+#define HAS_AXIS_UNHOMED_ERR (                                                     \
+         ENABLED(Z_PROBE_ALLEN_KEY)                                                \
+      || ENABLED(Z_PROBE_SLED)                                                     \
+      || HAS_PROBING_PROCEDURE                                                     \
+      || HOTENDS > 1                                                               \
+      || ENABLED(NOZZLE_CLEAN_FEATURE)                                             \
+      || ENABLED(NOZZLE_PARK_FEATURE)                                              \
+      || (ENABLED(ADVANCED_PAUSE_FEATURE) && ENABLED(HOME_BEFORE_FILAMENT_CHANGE)) \
+    ) || ENABLED(NO_MOTION_BEFORE_HOMING)
 
 #if HAS_AXIS_UNHOMED_ERR
   bool axis_unhomed_error(const bool x=true, const bool y=true, const bool z=true);

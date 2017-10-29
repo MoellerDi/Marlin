@@ -227,13 +227,8 @@
   #define MICROSTEP16 HIGH,HIGH
 
   /**
-   * Advance calculated values
+   * Override here because this is set in Configuration_adv.h
    */
-  #if ENABLED(ADVANCE)
-    #define EXTRUSION_AREA (0.25 * (D_FILAMENT) * (D_FILAMENT) * M_PI)
-    #define STEPS_PER_CUBIC_MM_E (axis_steps_per_mm[E_AXIS_N] / (EXTRUSION_AREA))
-  #endif
-
   #if ENABLED(ULTIPANEL) && DISABLED(ELB_FULL_GRAPHIC_CONTROLLER)
     #undef SD_DETECT_INVERTED
   #endif
@@ -384,28 +379,113 @@
   #define ARRAY_BY_HOTENDS1(v1) ARRAY_BY_HOTENDS(v1, v1, v1, v1, v1, v1)
 
   /**
+   * X_DUAL_ENDSTOPS endstop reassignment
+   */
+  #if ENABLED(X_DUAL_ENDSTOPS)
+    #if X_HOME_DIR > 0
+      #if X2_USE_ENDSTOP == _XMIN_
+        #define X2_MAX_ENDSTOP_INVERTING X_MIN_ENDSTOP_INVERTING
+        #define X2_MAX_PIN X_MIN_PIN
+      #elif X2_USE_ENDSTOP == _XMAX_
+        #define X2_MAX_ENDSTOP_INVERTING X_MAX_ENDSTOP_INVERTING
+        #define X2_MAX_PIN X_MAX_PIN
+      #elif X2_USE_ENDSTOP == _YMIN_
+        #define X2_MAX_ENDSTOP_INVERTING Y_MIN_ENDSTOP_INVERTING
+        #define X2_MAX_PIN Y_MIN_PIN
+      #elif X2_USE_ENDSTOP == _YMAX_
+        #define X2_MAX_ENDSTOP_INVERTING Y_MAX_ENDSTOP_INVERTING
+        #define X2_MAX_PIN Y_MAX_PIN
+      #elif X2_USE_ENDSTOP == _ZMIN_
+        #define X2_MAX_ENDSTOP_INVERTING Z_MIN_ENDSTOP_INVERTING
+        #define X2_MAX_PIN Z_MIN_PIN
+      #elif X2_USE_ENDSTOP == _ZMAX_
+        #define X2_MAX_ENDSTOP_INVERTING Z_MAX_ENDSTOP_INVERTING
+        #define X2_MAX_PIN Z_MAX_PIN
+      #else
+        #define X2_MAX_ENDSTOP_INVERTING false
+      #endif
+    #elif X2_USE_ENDSTOP == _XMIN_
+      #define X2_MIN_ENDSTOP_INVERTING X_MIN_ENDSTOP_INVERTING
+      #define X2_MIN_PIN X_MIN_PIN
+    #elif X2_USE_ENDSTOP == _XMAX_
+      #define X2_MIN_ENDSTOP_INVERTING X_MAX_ENDSTOP_INVERTING
+      #define X2_MIN_PIN X_MAX_PIN
+    #elif X2_USE_ENDSTOP == _YMIN_
+      #define X2_MIN_ENDSTOP_INVERTING Y_MIN_ENDSTOP_INVERTING
+      #define X2_MIN_PIN Y_MIN_PIN
+    #elif X2_USE_ENDSTOP == _YMAX_
+      #define X2_MIN_ENDSTOP_INVERTING Y_MAX_ENDSTOP_INVERTING
+      #define X2_MIN_PIN Y_MAX_PIN
+    #elif X2_USE_ENDSTOP == _ZMIN_
+      #define X2_MIN_ENDSTOP_INVERTING Z_MIN_ENDSTOP_INVERTING
+      #define X2_MIN_PIN Z_MIN_PIN
+    #elif X2_USE_ENDSTOP == _ZMAX_
+      #define X2_MIN_ENDSTOP_INVERTING Z_MAX_ENDSTOP_INVERTING
+      #define X2_MIN_PIN Z_MAX_PIN
+    #else
+      #define X2_MIN_ENDSTOP_INVERTING false
+    #endif
+  #endif
+
+  // Is an endstop plug used for the X2 endstop?
+  #define IS_X2_ENDSTOP(A,M) (ENABLED(X_DUAL_ENDSTOPS) && X2_USE_ENDSTOP == _##A##M##_)
+
+  /**
+   * Y_DUAL_ENDSTOPS endstop reassignment
+   */
+  #if ENABLED(Y_DUAL_ENDSTOPS)
+    #if Y_HOME_DIR > 0
+      #if Y2_USE_ENDSTOP == _XMIN_
+        #define Y2_MAX_ENDSTOP_INVERTING X_MIN_ENDSTOP_INVERTING
+        #define Y2_MAX_PIN X_MIN_PIN
+      #elif Y2_USE_ENDSTOP == _XMAX_
+        #define Y2_MAX_ENDSTOP_INVERTING X_MAX_ENDSTOP_INVERTING
+        #define Y2_MAX_PIN X_MAX_PIN
+      #elif Y2_USE_ENDSTOP == _YMIN_
+        #define Y2_MAX_ENDSTOP_INVERTING Y_MIN_ENDSTOP_INVERTING
+        #define Y2_MAX_PIN Y_MIN_PIN
+      #elif Y2_USE_ENDSTOP == _YMAX_
+        #define Y2_MAX_ENDSTOP_INVERTING Y_MAX_ENDSTOP_INVERTING
+        #define Y2_MAX_PIN Y_MAX_PIN
+      #elif Y2_USE_ENDSTOP == _ZMIN_
+        #define Y2_MAX_ENDSTOP_INVERTING Z_MIN_ENDSTOP_INVERTING
+        #define Y2_MAX_PIN Z_MIN_PIN
+      #elif Y2_USE_ENDSTOP == _ZMAX_
+        #define Y2_MAX_ENDSTOP_INVERTING Z_MAX_ENDSTOP_INVERTING
+        #define Y2_MAX_PIN Z_MAX_PIN
+      #else
+        #define Y2_MAX_ENDSTOP_INVERTING false
+      #endif
+    #elif Y2_USE_ENDSTOP == _XMIN_
+      #define Y2_MIN_ENDSTOP_INVERTING X_MIN_ENDSTOP_INVERTING
+      #define Y2_MIN_PIN X_MIN_PIN
+    #elif Y2_USE_ENDSTOP == _XMAX_
+      #define Y2_MIN_ENDSTOP_INVERTING X_MAX_ENDSTOP_INVERTING
+      #define Y2_MIN_PIN X_MAX_PIN
+    #elif Y2_USE_ENDSTOP == _YMIN_
+      #define Y2_MIN_ENDSTOP_INVERTING Y_MIN_ENDSTOP_INVERTING
+      #define Y2_MIN_PIN Y_MIN_PIN
+    #elif Y2_USE_ENDSTOP == _YMAX_
+      #define Y2_MIN_ENDSTOP_INVERTING Y_MAX_ENDSTOP_INVERTING
+      #define Y2_MIN_PIN Y_MAX_PIN
+    #elif Y2_USE_ENDSTOP == _ZMIN_
+      #define Y2_MIN_ENDSTOP_INVERTING Z_MIN_ENDSTOP_INVERTING
+      #define Y2_MIN_PIN Z_MIN_PIN
+    #elif Y2_USE_ENDSTOP == _ZMAX_
+      #define Y2_MIN_ENDSTOP_INVERTING Z_MAX_ENDSTOP_INVERTING
+      #define Y2_MIN_PIN Z_MAX_PIN
+    #else
+      #define Y2_MIN_ENDSTOP_INVERTING false
+    #endif
+  #endif
+
+  // Is an endstop plug used for the Y2 endstop or the bed probe?
+  #define IS_Y2_ENDSTOP(A,M) (ENABLED(Y_DUAL_ENDSTOPS) && Y2_USE_ENDSTOP == _##A##M##_)
+
+  /**
    * Z_DUAL_ENDSTOPS endstop reassignment
    */
   #if ENABLED(Z_DUAL_ENDSTOPS)
-    #define _XMIN_ 100
-    #define _YMIN_ 200
-    #define _ZMIN_ 300
-    #define _XMAX_ 101
-    #define _YMAX_ 201
-    #define _ZMAX_ 301
-    #if Z2_USE_ENDSTOP == _XMIN_
-      #define USE_XMIN_PLUG
-    #elif Z2_USE_ENDSTOP == _XMAX_
-      #define USE_XMAX_PLUG
-    #elif Z2_USE_ENDSTOP == _YMIN_
-      #define USE_YMIN_PLUG
-    #elif Z2_USE_ENDSTOP == _YMAX_
-      #define USE_YMAX_PLUG
-    #elif Z2_USE_ENDSTOP == _ZMIN_
-      #define USE_ZMIN_PLUG
-    #elif Z2_USE_ENDSTOP == _ZMAX_
-      #define USE_ZMAX_PLUG
-    #endif
     #if Z_HOME_DIR > 0
       #if Z2_USE_ENDSTOP == _XMIN_
         #define Z2_MAX_ENDSTOP_INVERTING X_MIN_ENDSTOP_INVERTING
@@ -428,28 +508,26 @@
       #else
         #define Z2_MAX_ENDSTOP_INVERTING false
       #endif
+    #elif Z2_USE_ENDSTOP == _XMIN_
+      #define Z2_MIN_ENDSTOP_INVERTING X_MIN_ENDSTOP_INVERTING
+      #define Z2_MIN_PIN X_MIN_PIN
+    #elif Z2_USE_ENDSTOP == _XMAX_
+      #define Z2_MIN_ENDSTOP_INVERTING X_MAX_ENDSTOP_INVERTING
+      #define Z2_MIN_PIN X_MAX_PIN
+    #elif Z2_USE_ENDSTOP == _YMIN_
+      #define Z2_MIN_ENDSTOP_INVERTING Y_MIN_ENDSTOP_INVERTING
+      #define Z2_MIN_PIN Y_MIN_PIN
+    #elif Z2_USE_ENDSTOP == _YMAX_
+      #define Z2_MIN_ENDSTOP_INVERTING Y_MAX_ENDSTOP_INVERTING
+      #define Z2_MIN_PIN Y_MAX_PIN
+    #elif Z2_USE_ENDSTOP == _ZMIN_
+      #define Z2_MIN_ENDSTOP_INVERTING Z_MIN_ENDSTOP_INVERTING
+      #define Z2_MIN_PIN Z_MIN_PIN
+    #elif Z2_USE_ENDSTOP == _ZMAX_
+      #define Z2_MIN_ENDSTOP_INVERTING Z_MAX_ENDSTOP_INVERTING
+      #define Z2_MIN_PIN Z_MAX_PIN
     #else
-      #if Z2_USE_ENDSTOP == _XMIN_
-        #define Z2_MIN_ENDSTOP_INVERTING X_MIN_ENDSTOP_INVERTING
-        #define Z2_MIN_PIN X_MIN_PIN
-      #elif Z2_USE_ENDSTOP == _XMAX_
-        #define Z2_MIN_ENDSTOP_INVERTING X_MAX_ENDSTOP_INVERTING
-        #define Z2_MIN_PIN X_MAX_PIN
-      #elif Z2_USE_ENDSTOP == _YMIN_
-        #define Z2_MIN_ENDSTOP_INVERTING Y_MIN_ENDSTOP_INVERTING
-        #define Z2_MIN_PIN Y_MIN_PIN
-      #elif Z2_USE_ENDSTOP == _YMAX_
-        #define Z2_MIN_ENDSTOP_INVERTING Y_MAX_ENDSTOP_INVERTING
-        #define Z2_MIN_PIN Y_MAX_PIN
-      #elif Z2_USE_ENDSTOP == _ZMIN_
-        #define Z2_MIN_ENDSTOP_INVERTING Z_MIN_ENDSTOP_INVERTING
-        #define Z2_MIN_PIN Z_MIN_PIN
-      #elif Z2_USE_ENDSTOP == _ZMAX_
-        #define Z2_MIN_ENDSTOP_INVERTING Z_MAX_ENDSTOP_INVERTING
-        #define Z2_MIN_PIN Z_MAX_PIN
-      #else
-        #define Z2_MIN_ENDSTOP_INVERTING false
-      #endif
+      #define Z2_MIN_ENDSTOP_INVERTING false
     #endif
   #endif
 
@@ -546,12 +624,16 @@
   #define HAS_SOLENOID_4    (PIN_EXISTS(SOL4))
 
   // Endstops and bed probe
-  #define HAS_X_MIN (PIN_EXISTS(X_MIN) && !IS_Z2_OR_PROBE(X,MIN))
-  #define HAS_X_MAX (PIN_EXISTS(X_MAX) && !IS_Z2_OR_PROBE(X,MAX))
-  #define HAS_Y_MIN (PIN_EXISTS(Y_MIN) && !IS_Z2_OR_PROBE(Y,MIN))
-  #define HAS_Y_MAX (PIN_EXISTS(Y_MAX) && !IS_Z2_OR_PROBE(Y,MAX))
-  #define HAS_Z_MIN (PIN_EXISTS(Z_MIN) && !IS_Z2_OR_PROBE(Z,MIN))
-  #define HAS_Z_MAX (PIN_EXISTS(Z_MAX) && !IS_Z2_OR_PROBE(Z,MAX))
+  #define HAS_X_MIN (PIN_EXISTS(X_MIN) && !IS_X2_ENDSTOP(X,MIN) && !IS_Y2_ENDSTOP(X,MIN) && !IS_Z2_OR_PROBE(X,MIN))
+  #define HAS_X_MAX (PIN_EXISTS(X_MAX) && !IS_X2_ENDSTOP(X,MAX) && !IS_Y2_ENDSTOP(X,MAX) && !IS_Z2_OR_PROBE(X,MAX))
+  #define HAS_Y_MIN (PIN_EXISTS(Y_MIN) && !IS_X2_ENDSTOP(Y,MIN) && !IS_Y2_ENDSTOP(Y,MIN) && !IS_Z2_OR_PROBE(Y,MIN))
+  #define HAS_Y_MAX (PIN_EXISTS(Y_MAX) && !IS_X2_ENDSTOP(Y,MAX) && !IS_Y2_ENDSTOP(Y,MAX) && !IS_Z2_OR_PROBE(Y,MAX))
+  #define HAS_Z_MIN (PIN_EXISTS(Z_MIN) && !IS_X2_ENDSTOP(Z,MIN) && !IS_Y2_ENDSTOP(Z,MIN) && !IS_Z2_OR_PROBE(Z,MIN))
+  #define HAS_Z_MAX (PIN_EXISTS(Z_MAX) && !IS_X2_ENDSTOP(Z,MAX) && !IS_Y2_ENDSTOP(Z,MAX) && !IS_Z2_OR_PROBE(Z,MAX))
+  #define HAS_X2_MIN (PIN_EXISTS(X2_MIN))
+  #define HAS_X2_MAX (PIN_EXISTS(X2_MAX))
+  #define HAS_Y2_MIN (PIN_EXISTS(Y2_MIN))
+  #define HAS_Y2_MAX (PIN_EXISTS(Y2_MAX))
   #define HAS_Z2_MIN (PIN_EXISTS(Z2_MIN))
   #define HAS_Z2_MAX (PIN_EXISTS(Z2_MAX))
   #define HAS_Z_MIN_PROBE_PIN (PIN_EXISTS(Z_MIN_PROBE))
@@ -788,14 +870,81 @@
   #define UBL_DELTA  (ENABLED(AUTO_BED_LEVELING_UBL) && (ENABLED(DELTA) || ENABLED(UBL_GRANULAR_SEGMENTATION_FOR_CARTESIAN)))
   #define ABL_PLANAR (ENABLED(AUTO_BED_LEVELING_LINEAR) || ENABLED(AUTO_BED_LEVELING_3POINT))
   #define ABL_GRID   (ENABLED(AUTO_BED_LEVELING_LINEAR) || ENABLED(AUTO_BED_LEVELING_BILINEAR))
-  #define HAS_ABL    (ABL_PLANAR || ABL_GRID || ENABLED(AUTO_BED_LEVELING_UBL))
+  #define OLDSCHOOL_ABL         (ABL_PLANAR || ABL_GRID)
+  #define HAS_ABL               (OLDSCHOOL_ABL || ENABLED(AUTO_BED_LEVELING_UBL))
   #define HAS_LEVELING          (HAS_ABL || ENABLED(MESH_BED_LEVELING))
-  #define PLANNER_LEVELING      (ABL_PLANAR || ABL_GRID || ENABLED(MESH_BED_LEVELING) || UBL_DELTA)
+  #define HAS_AUTOLEVEL         (HAS_ABL && DISABLED(PROBE_MANUALLY))
+  #define HAS_MESH              (ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(AUTO_BED_LEVELING_UBL) || ENABLED(MESH_BED_LEVELING))
+  #define PLANNER_LEVELING      (OLDSCHOOL_ABL || ENABLED(MESH_BED_LEVELING) || UBL_DELTA)
   #define HAS_PROBING_PROCEDURE (HAS_ABL || ENABLED(Z_MIN_PROBE_REPEATABILITY_TEST))
   #if HAS_PROBING_PROCEDURE
     #define PROBE_BED_WIDTH abs(RIGHT_PROBE_BED_POSITION - (LEFT_PROBE_BED_POSITION))
     #define PROBE_BED_HEIGHT abs(BACK_PROBE_BED_POSITION - (FRONT_PROBE_BED_POSITION))
   #endif
+
+  /**
+   * Bed Probing rectangular bounds
+   * These can be further constrained in code for Delta and SCARA
+   */
+  #if ENABLED(DELTA)
+    // Probing points may be verified at compile time within the radius
+    // using static_assert(HYPOT2(X2-X1,Y2-Y1)<=sq(DELTA_PRINTABLE_RADIUS),"bad probe point!")
+    // so that may be added to SanityCheck.h in the future.
+    #define MIN_PROBE_X (X_CENTER - (DELTA_PROBEABLE_RADIUS))
+    #define MIN_PROBE_Y (Y_CENTER - (DELTA_PROBEABLE_RADIUS))
+    #define MAX_PROBE_X (X_CENTER +  DELTA_PROBEABLE_RADIUS)
+    #define MAX_PROBE_Y (Y_CENTER +  DELTA_PROBEABLE_RADIUS)
+  #elif IS_SCARA
+    #define SCARA_PRINTABLE_RADIUS (SCARA_LINKAGE_1 + SCARA_LINKAGE_2)
+    #define MIN_PROBE_X (X_CENTER - (SCARA_PRINTABLE_RADIUS))
+    #define MIN_PROBE_Y (Y_CENTER - (SCARA_PRINTABLE_RADIUS))
+    #define MAX_PROBE_X (X_CENTER +  SCARA_PRINTABLE_RADIUS)
+    #define MAX_PROBE_Y (Y_CENTER +  SCARA_PRINTABLE_RADIUS)
+  #else
+    // Boundaries for Cartesian probing based on bed limits
+    #define MIN_PROBE_X (max(X_MIN_BED, X_MIN_POS + X_PROBE_OFFSET_FROM_EXTRUDER))
+    #define MIN_PROBE_Y (max(Y_MIN_BED, Y_MIN_POS + Y_PROBE_OFFSET_FROM_EXTRUDER))
+    #define MAX_PROBE_X (min(X_MAX_BED, X_MAX_POS + X_PROBE_OFFSET_FROM_EXTRUDER))
+    #define MAX_PROBE_Y (min(Y_MAX_BED, Y_MAX_POS + Y_PROBE_OFFSET_FROM_EXTRUDER))
+  #endif
+
+  /**
+   * Default mesh area is an area with an inset margin on the print area.
+   */
+  #if ENABLED(MESH_BED_LEVELING) || ENABLED(AUTO_BED_LEVELING_UBL)
+    #if IS_KINEMATIC
+      // Probing points may be verified at compile time within the radius
+      // using static_assert(HYPOT2(X2-X1,Y2-Y1)<=sq(DELTA_PRINTABLE_RADIUS),"bad probe point!")
+      // so that may be added to SanityCheck.h in the future.
+      #define _MESH_MIN_X (MIN_PROBE_X + MESH_INSET)
+      #define _MESH_MIN_Y (MIN_PROBE_Y + MESH_INSET)
+      #define _MESH_MAX_X (MAX_PROBE_X - (MESH_INSET))
+      #define _MESH_MAX_Y (MAX_PROBE_Y - (MESH_INSET))
+    #else
+      // Boundaries for Cartesian probing based on set limits
+      #define _MESH_MIN_X (max(X_MIN_BED + MESH_INSET, X_MIN_POS + X_PROBE_OFFSET_FROM_EXTRUDER))
+      #define _MESH_MIN_Y (max(Y_MIN_BED + MESH_INSET, Y_MIN_POS + Y_PROBE_OFFSET_FROM_EXTRUDER))
+      #define _MESH_MAX_X (min(X_MAX_BED - (MESH_INSET), X_MAX_POS + X_PROBE_OFFSET_FROM_EXTRUDER))
+      #define _MESH_MAX_Y (min(Y_MAX_BED - (MESH_INSET), Y_MAX_POS + Y_PROBE_OFFSET_FROM_EXTRUDER))
+    #endif
+    /**
+     * These may be overridden in Configuration if a smaller area is wanted
+     */
+    #if ENABLED(MESH_BED_LEVELING) || ENABLED(AUTO_BED_LEVELING_UBL)
+      #ifndef MESH_MIN_X
+        #define MESH_MIN_X _MESH_MIN_X
+      #endif
+      #ifndef MESH_MIN_Y
+        #define MESH_MIN_Y _MESH_MIN_Y
+      #endif
+      #ifndef MESH_MAX_X
+        #define MESH_MAX_X _MESH_MAX_X
+      #endif
+      #ifndef MESH_MAX_Y
+        #define MESH_MAX_Y _MESH_MAX_Y
+      #endif
+    #endif
+  #endif // MESH_BED_LEVELING || AUTO_BED_LEVELING_UBL
 
   /**
    * Buzzer/Speaker
@@ -833,42 +982,6 @@
     #define MANUAL_PROBE_HEIGHT Z_CLEARANCE_BETWEEN_PROBES
   #else
     #define MANUAL_PROBE_HEIGHT Z_HOMING_HEIGHT
-  #endif
-
-  /**
-   * Bed Probing rectangular bounds
-   * These can be further constrained in code for Delta and SCARA
-   */
-  #if ENABLED(DELTA)
-    #ifndef DELTA_PROBEABLE_RADIUS
-      #define DELTA_PROBEABLE_RADIUS DELTA_PRINTABLE_RADIUS
-    #endif
-    // Probing points may be verified at compile time within the radius
-    // using static_assert(HYPOT2(X2-X1,Y2-Y1)<=sq(DELTA_PRINTABLE_RADIUS),"bad probe point!")
-    // so that may be added to SanityCheck.h in the future.
-    #define MIN_PROBE_X (X_CENTER - (DELTA_PROBEABLE_RADIUS))
-    #define MIN_PROBE_Y (Y_CENTER - (DELTA_PROBEABLE_RADIUS))
-    #define MAX_PROBE_X (X_CENTER +  DELTA_PROBEABLE_RADIUS)
-    #define MAX_PROBE_Y (Y_CENTER +  DELTA_PROBEABLE_RADIUS)
-  #elif IS_SCARA
-    #define SCARA_PRINTABLE_RADIUS (SCARA_LINKAGE_1 + SCARA_LINKAGE_2)
-    #define MIN_PROBE_X (X_CENTER - (SCARA_PRINTABLE_RADIUS))
-    #define MIN_PROBE_Y (Y_CENTER - (SCARA_PRINTABLE_RADIUS))
-    #define MAX_PROBE_X (X_CENTER +  SCARA_PRINTABLE_RADIUS)
-    #define MAX_PROBE_Y (Y_CENTER +  SCARA_PRINTABLE_RADIUS)
-  #else
-    // Boundaries for Cartesian probing based on set limits
-    #if ENABLED(BED_CENTER_AT_0_0)
-      #define MIN_PROBE_X (max(X_PROBE_OFFSET_FROM_EXTRUDER, 0) - (X_BED_SIZE) / 2)
-      #define MIN_PROBE_Y (max(Y_PROBE_OFFSET_FROM_EXTRUDER, 0) - (Y_BED_SIZE) / 2)
-      #define MAX_PROBE_X (min(X_BED_SIZE + X_PROBE_OFFSET_FROM_EXTRUDER, X_BED_SIZE) - (X_BED_SIZE) / 2)
-      #define MAX_PROBE_Y (min(Y_BED_SIZE + Y_PROBE_OFFSET_FROM_EXTRUDER, Y_BED_SIZE) - (Y_BED_SIZE) / 2)
-    #else
-      #define MIN_PROBE_X (max(X_MIN_POS + X_PROBE_OFFSET_FROM_EXTRUDER, 0))
-      #define MIN_PROBE_Y (max(Y_MIN_POS + Y_PROBE_OFFSET_FROM_EXTRUDER, 0))
-      #define MAX_PROBE_X (min(X_MAX_POS + X_PROBE_OFFSET_FROM_EXTRUDER, X_BED_SIZE))
-      #define MAX_PROBE_Y (min(Y_MAX_POS + Y_PROBE_OFFSET_FROM_EXTRUDER, Y_BED_SIZE))
-    #endif
   #endif
 
   // Stepper pulse duration, in cycles
