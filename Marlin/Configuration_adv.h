@@ -350,8 +350,8 @@
 #define X_HOME_BUMP_MM 5
 #define Y_HOME_BUMP_MM 5
 #define Z_HOME_BUMP_MM 2
-#define HOMING_BUMP_DIVISOR {2, 2, 4}  // Re-Bump Speed Divisor (Divides the Homing Feedrate)
-//#define QUICK_HOME  //if this is defined, if both x and y are to be homed, a diagonal move will be performed initially.
+#define HOMING_BUMP_DIVISOR { 2, 2, 4 }  // Re-Bump Speed Divisor (Divides the Homing Feedrate)
+#define QUICK_HOME  //if this is defined, if both x and y are to be homed, a diagonal move will be performed initially.
 
 // When G28 is called, this option will make Y home before X
 //#define HOME_Y_BEFORE_X
@@ -472,7 +472,7 @@
 //#define LCD_INFO_MENU
 
 // Scroll a longer status message into view
-//#define STATUS_MESSAGE_SCROLLING
+#define STATUS_MESSAGE_SCROLLING
 
 // On the Info Screen, display XY with one decimal place when possible
 //#define LCD_DECIMAL_SMALL_XY
@@ -632,13 +632,13 @@
  *
  * Warning: Does not respect endstops!
  */
-//#define BABYSTEPPING
+#define BABYSTEPPING
 #if ENABLED(BABYSTEPPING)
-  //#define BABYSTEP_XY              // Also enable X/Y Babystepping. Not supported on DELTA!
-  #define BABYSTEP_INVERT_Z false    // Change if Z babysteps should go the other way
-  #define BABYSTEP_MULTIPLICATOR 1   // Babysteps are very small. Increase for faster motion.
-  //#define BABYSTEP_ZPROBE_OFFSET   // Enable to combine M851 and Babystepping
-  //#define DOUBLECLICK_FOR_Z_BABYSTEPPING // Double-click on the Status Screen for Z Babystepping.
+  //#define BABYSTEP_XY            // Also enable X/Y Babystepping. Not supported on DELTA!
+  #define BABYSTEP_INVERT_Z false  // Change if Z babysteps should go the other way
+  #define BABYSTEP_MULTIPLICATOR 10 // Babysteps are very small. Increase for faster motion.
+  //#define BABYSTEP_ZPROBE_OFFSET // Enable to combine M851 and Babystepping
+  #define DOUBLECLICK_FOR_Z_BABYSTEPPING // Double-click on the Status Screen for Z Babystepping.
   #define DOUBLECLICK_MAX_INTERVAL 1250 // Maximum interval between clicks, in milliseconds.
                                         // Note: Extra time may be added to mitigate controller latency.
   //#define BABYSTEP_ZPROBE_GFX_OVERLAY // Enable graphical overlay on Z-offset editor
@@ -708,7 +708,7 @@
 //
 // G2/G3 Arc Support
 //
-#define ARC_SUPPORT               // Disable this feature to save ~3226 bytes
+//#define ARC_SUPPORT               // Disable this feature to save ~3226 bytes
 #if ENABLED(ARC_SUPPORT)
   #define MM_PER_ARC_SEGMENT  1   // Length of each arc segment
   #define N_ARC_CORRECTION   25   // Number of intertpolated segments between corrections
@@ -853,22 +853,22 @@
  * Requires an LCD display.
  * This feature is required for the default FILAMENT_RUNOUT_SCRIPT.
  */
-//#define ADVANCED_PAUSE_FEATURE
+#define ADVANCED_PAUSE_FEATURE
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
-  #define PAUSE_PARK_X_POS 3                  // X position of hotend
-  #define PAUSE_PARK_Y_POS 3                  // Y position of hotend
-  #define PAUSE_PARK_Z_ADD 10                 // Z addition of hotend (lift)
+  #define PAUSE_PARK_X_POS   3                // X position of hotend
+  #define PAUSE_PARK_Y_POS 297                // Y position of hotend
+  #define PAUSE_PARK_Z_ADD   5                // Z addition of hotend (lift)
   #define PAUSE_PARK_XY_FEEDRATE 100          // X and Y axes feedrate in mm/s (also used for delta printers Z axis)
   #define PAUSE_PARK_Z_FEEDRATE 5             // Z axis feedrate in mm/s (not used for delta printers)
   #define PAUSE_PARK_RETRACT_FEEDRATE 60      // Initial retract feedrate in mm/s
-  #define PAUSE_PARK_RETRACT_LENGTH 2         // Initial retract in mm
+  #define PAUSE_PARK_RETRACT_LENGTH 4         // Initial retract in mm
                                               // It is a short retract used immediately after print interrupt before move to filament exchange position
   #define FILAMENT_CHANGE_UNLOAD_FEEDRATE 10  // Unload filament feedrate in mm/s - filament unloading can be fast
-  #define FILAMENT_CHANGE_UNLOAD_LENGTH 100   // Unload filament length from hotend in mm
+  #define FILAMENT_CHANGE_UNLOAD_LENGTH 420   // Unload filament length from hotend in mm
                                               // Longer length for bowden printers to unload filament from whole bowden tube,
                                               // shorter length for printers without bowden to unload filament from extruder only,
                                               // 0 to disable unloading for manual unloading
-  #define FILAMENT_CHANGE_LOAD_FEEDRATE 6     // Load filament feedrate in mm/s - filament loading into the bowden tube can be fast
+  #define FILAMENT_CHANGE_LOAD_FEEDRATE 8     // Load filament feedrate in mm/s - filament loading into the bowden tube can be fast
   #define FILAMENT_CHANGE_LOAD_LENGTH 0       // Load filament length over hotend in mm
                                               // Longer length for bowden printers to fast load filament into whole bowden tube over the hotend,
                                               // Short or zero length for printers without bowden where loading is not used
@@ -877,12 +877,12 @@
                                               // 0 to disable for manual extrusion
                                               // Filament can be extruded repeatedly from the filament exchange menu to fill the hotend,
                                               // or until outcoming filament color is not clear for filament color change
-  #define PAUSE_PARK_NOZZLE_TIMEOUT 45        // Turn off nozzle if user doesn't change filament within this time limit in seconds
-  #define FILAMENT_CHANGE_NUMBER_OF_ALERT_BEEPS 5 // Number of alert beeps before printer goes quiet
+  #define PAUSE_PARK_NOZZLE_TIMEOUT 120       // Turn off nozzle if user doesn't change filament within this time limit in seconds
+  #define FILAMENT_CHANGE_NUMBER_OF_ALERT_BEEPS 3 // Number of alert beeps before printer goes quiet
   #define PAUSE_PARK_NO_STEPPER_TIMEOUT       // Enable to have stepper motors hold position during filament change
                                               // even if it takes longer than DEFAULT_STEPPER_DEACTIVE_TIME.
-  //#define PARK_HEAD_ON_PAUSE                // Go to filament change position on pause, return to print position on resume
-  //#define HOME_BEFORE_FILAMENT_CHANGE       // Ensure homing has been completed prior to parking for filament change
+  #define PARK_HEAD_ON_PAUSE                  // Go to filament change position on pause, return to print position on resume
+  #define HOME_BEFORE_FILAMENT_CHANGE         // Ensure homing has been completed prior to parking for filament change
 #endif
 
 // @section tmc
@@ -1298,7 +1298,7 @@
  *  - M206 and M428 are disabled.
  *  - G92 will revert to its behavior from Marlin 1.0.
  */
-//#define NO_WORKSPACE_OFFSETS
+#define NO_WORKSPACE_OFFSETS
 
 /**
  * Set the number of proportional font spaces required to fill up a typical character space.
