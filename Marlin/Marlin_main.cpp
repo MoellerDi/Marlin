@@ -472,11 +472,14 @@ float filament_size[EXTRUDERS], volumetric_multiplier[EXTRUDERS];
 #endif
 
 // Software Endstops are based on the configured limits.
-#if HAS_SOFTWARE_ENDSTOPS
-  bool soft_endstops_enabled = true;
-#endif
 float soft_endstop_min[XYZ] = { X_MIN_BED, Y_MIN_BED, Z_MIN_POS },
       soft_endstop_max[XYZ] = { X_MAX_BED, Y_MAX_BED, Z_MAX_POS };
+#if HAS_SOFTWARE_ENDSTOPS
+  bool soft_endstops_enabled = true;
+  #if IS_KINEMATIC
+    float soft_endstop_radius, soft_endstop_radius_2;
+  #endif
+#endif
 
 #if FAN_COUNT > 0
   int16_t fanSpeeds[FAN_COUNT] = { 0 };
@@ -1464,8 +1467,17 @@ bool get_target_extruder_from_command(const uint16_t code) {
     #endif
 
     #if ENABLED(DELTA)
-      if (axis == Z_AXIS)
-        delta_clip_start_height = soft_endstop_max[axis] - delta_safe_distance_from_top();
+      switch(axis) {
+        case X_AXIS:
+        case Y_AXIS:
+          // Get a minimum radius for clamping
+          soft_endstop_radius = MIN3(FABS(max(soft_endstop_min[X_AXIS], soft_endstop_min[Y_AXIS])), soft_endstop_max[X_AXIS], soft_endstop_max[Y_AXIS]);
+          soft_endstop_radius_2 = sq(soft_endstop_radius);
+          break;
+        case Z_AXIS:
+          delta_clip_start_height = soft_endstop_max[axis] - delta_safe_distance_from_top();
+        default: break;
+      }
     #endif
   }
 
@@ -3403,6 +3415,12 @@ void gcode_get_destination() {
  ***************** GCode Handlers *****************
  **************************************************/
 
+#if ENABLED(NO_MOTION_BEFORE_HOMING)
+  #define G0_G1_CONDITION !axis_unhomed_error(parser.seen('X'), parser.seen('Y'), parser.seen('Z'))
+#else
+  #define G0_G1_CONDITION true
+#endif
+
 /**
  * G0, G1: Coordinated movement of X Y Z E axes
  */
@@ -3411,11 +3429,7 @@ inline void gcode_G0_G1(
     bool fast_move=false
   #endif
 ) {
-  #if ENABLED(NO_MOTION_BEFORE_HOMING)
-    if (axis_unhomed_error()) return;
-  #endif
-
-  if (IsRunning()) {
+  if (IsRunning() && G0_G1_CONDITION) {
     gcode_get_destination(); // For X Y Z E F
 
     #if ENABLED(FWRETRACT)
@@ -8797,7 +8811,7 @@ inline void gcode_M204() {
 inline void gcode_M205() {
   if (parser.seen('S')) planner.min_feedrate_mm_s = parser.value_linear_units();
   if (parser.seen('T')) planner.min_travel_feedrate_mm_s = parser.value_linear_units();
-  if (parser.seen('B')) planner.min_segment_time = parser.value_millis();
+  if (parser.seen('B')) planner.min_segment_time_us = parser.value_ulong();
   if (parser.seen('X')) planner.max_jerk[X_AXIS] = parser.value_linear_units();
   if (parser.seen('Y')) planner.max_jerk[Y_AXIS] = parser.value_linear_units();
   if (parser.seen('Z')) planner.max_jerk[Z_AXIS] = parser.value_linear_units();
@@ -12047,30 +12061,35 @@ void ok_to_send() {
 
   /**
    * Constrain the given coordinates to the software endstops.
-   */
-
-  /**
-   * Constrain the given coordinates to the software endstops.
    *
-   * NOTE: This will only apply to Z on DELTA and SCARA. XY is
-   *       constrained to a circle on these kinematic systems.
+   * For DELTA/SCARA the XY constraint is based on the smallest
+   * radius within the set software endstops.
    */
   void clamp_to_software_endstops(float target[XYZ]) {
     if (!soft_endstops_enabled) return;
-    #if ENABLED(MIN_SOFTWARE_ENDSTOP_X)
-      NOLESS(target[X_AXIS], soft_endstop_min[X_AXIS]);
-    #endif
-    #if ENABLED(MIN_SOFTWARE_ENDSTOP_Y)
-      NOLESS(target[Y_AXIS], soft_endstop_min[Y_AXIS]);
+    #if IS_KINEMATIC
+      const float dist_2 = HYPOT2(target[X_AXIS], target[Y_AXIS]);
+      if (dist_2 > soft_endstop_radius_2) {
+        const float ratio = soft_endstop_radius / SQRT(dist_2); // 200 / 300 = 0.66
+        target[X_AXIS] *= ratio;
+        target[Y_AXIS] *= ratio;
+      }
+    #else
+      #if ENABLED(MIN_SOFTWARE_ENDSTOP_X)
+        NOLESS(target[X_AXIS], soft_endstop_min[X_AXIS]);
+      #endif
+      #if ENABLED(MIN_SOFTWARE_ENDSTOP_Y)
+        NOLESS(target[Y_AXIS], soft_endstop_min[Y_AXIS]);
+      #endif
+      #if ENABLED(MAX_SOFTWARE_ENDSTOP_X)
+        NOMORE(target[X_AXIS], soft_endstop_max[X_AXIS]);
+      #endif
+      #if ENABLED(MAX_SOFTWARE_ENDSTOP_Y)
+        NOMORE(target[Y_AXIS], soft_endstop_max[Y_AXIS]);
+      #endif
     #endif
     #if ENABLED(MIN_SOFTWARE_ENDSTOP_Z)
       NOLESS(target[Z_AXIS], soft_endstop_min[Z_AXIS]);
-    #endif
-    #if ENABLED(MAX_SOFTWARE_ENDSTOP_X)
-      NOMORE(target[X_AXIS], soft_endstop_max[X_AXIS]);
-    #endif
-    #if ENABLED(MAX_SOFTWARE_ENDSTOP_Y)
-      NOMORE(target[Y_AXIS], soft_endstop_max[Y_AXIS]);
     #endif
     #if ENABLED(MAX_SOFTWARE_ENDSTOP_Z)
       NOMORE(target[Z_AXIS], soft_endstop_max[Z_AXIS]);
