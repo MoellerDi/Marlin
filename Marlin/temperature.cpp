@@ -215,36 +215,74 @@ uint8_t Temperature::soft_pwm_amount[HOTENDS],
 
 #if HAS_PID_HEATING
 
-  void Temperature::PID_autotune(float temp, int hotend, int ncycles, bool set_result/*=false*/) {
+  /**
+   * PID Autotuning (M303)
+   *
+   * Alternately heat and cool the nozzle, observing its behavior to
+   * determine the best PID values to achieve a stable temperature.
+   */
+  void Temperature::PID_autotune(const float temp, const int8_t hotend, const int8_t ncycles, const bool set_result/*=false*/) {
     float input = 0.0;
     int cycles = 0;
     bool heating = true;
 
-    millis_t temp_ms = millis(), t1 = temp_ms, t2 = temp_ms;
+    millis_t next_temp_ms = millis(), t1 = next_temp_ms, t2 = next_temp_ms;
     long t_high = 0, t_low = 0;
 
     long bias, d;
-    float Ku, Tu;
-    float workKp = 0, workKi = 0, workKd = 0;
-    float max = 0, min = 10000;
+    float Ku, Tu,
+          workKp = 0, workKi = 0, workKd = 0,
+          max = 0, min = 10000;
 
-    #if HAS_AUTO_FAN
-      next_auto_fan_check_ms = temp_ms + 2500UL;
+    #if WATCH_THE_BED || WATCH_HOTENDS
+      const float watch_temp_target = temp -
+        #if ENABLED(THERMAL_PROTECTION_BED) && ENABLED(PIDTEMPBED) && ENABLED(THERMAL_PROTECTION_HOTENDS) && ENABLED(PIDTEMP)
+          (hotend < 0 ? (WATCH_BED_TEMP_INCREASE + TEMP_BED_HYSTERESIS + 1) : (WATCH_TEMP_INCREASE + TEMP_HYSTERESIS + 1))
+        #elif ENABLED(THERMAL_PROTECTION_BED) && ENABLED(PIDTEMPBED)
+          (WATCH_BED_TEMP_INCREASE + TEMP_BED_HYSTERESIS + 1)
+        #else
+          (WATCH_TEMP_INCREASE + TEMP_HYSTERESIS + 1)
+        #endif
+      ;
+      const int8_t watch_temp_period =
+        #if ENABLED(THERMAL_PROTECTION_BED) && ENABLED(PIDTEMPBED) && ENABLED(THERMAL_PROTECTION_HOTENDS) && ENABLED(PIDTEMP)
+          hotend < 0 ? WATCH_BED_TEMP_PERIOD : WATCH_TEMP_PERIOD
+        #elif ENABLED(THERMAL_PROTECTION_BED) && ENABLED(PIDTEMPBED)
+          WATCH_BED_TEMP_PERIOD
+        #else
+          WATCH_TEMP_PERIOD
+        #endif
+      ;
+      const int8_t watch_temp_increase =
+        #if ENABLED(THERMAL_PROTECTION_BED) && ENABLED(PIDTEMPBED) && ENABLED(THERMAL_PROTECTION_HOTENDS) && ENABLED(PIDTEMP)
+          hotend < 0 ? WATCH_BED_TEMP_INCREASE : WATCH_TEMP_INCREASE
+        #elif ENABLED(THERMAL_PROTECTION_BED) && ENABLED(PIDTEMPBED)
+          WATCH_BED_TEMP_INCREASE
+        #else
+          WATCH_TEMP_INCREASE
+        #endif
+      ;
+      millis_t temp_change_ms = next_temp_ms + watch_temp_period * 1000UL;
+      float next_watch_temp = 0.0;
+      bool heated = false;
     #endif
 
-    if (hotend >=
-        #if ENABLED(PIDTEMP)
-          HOTENDS
-        #else
-          0
-        #endif
-      || hotend <
-        #if ENABLED(PIDTEMPBED)
-          -1
-        #else
-          0
-        #endif
-    ) {
+    #if HAS_AUTO_FAN
+      next_auto_fan_check_ms = next_temp_ms + 2500UL;
+    #endif
+
+    #if ENABLED(PIDTEMP)
+      #define _TOP_HOTEND HOTENDS - 1
+    #else
+      #define _TOP_HOTEND -1
+    #endif
+    #if ENABLED(PIDTEMPBED)
+      #define _BOT_HOTEND -1
+    #else
+      #define _BOT_HOTEND 0
+    #endif
+
+    if (!WITHIN(hotend, _BOT_HOTEND, _TOP_HOTEND)) {
       SERIAL_ECHOLN(MSG_PID_BAD_EXTRUDER_NUM);
       return;
     }
@@ -330,7 +368,7 @@ uint8_t Temperature::soft_pwm_amount[HOTENDS],
               ;
               bias += (d * (t_high - t_low)) / (t_low + t_high);
               bias = constrain(bias, 20, max_pow - 20);
-              d = (bias > max_pow / 2) ? max_pow - 1 - bias : bias;
+              d = (bias > max_pow >> 1) ? max_pow - 1 - bias : bias;
 
               SERIAL_PROTOCOLPAIR(MSG_BIAS, bias);
               SERIAL_PROTOCOLPAIR(MSG_D, d);
@@ -387,13 +425,25 @@ uint8_t Temperature::soft_pwm_amount[HOTENDS],
         break;
       }
       // Every 2 seconds...
-      if (ELAPSED(ms, temp_ms)) {
+      if (ELAPSED(ms, next_temp_ms)) {
         #if HAS_TEMP_HOTEND || HAS_TEMP_BED
           print_heaterstates();
           SERIAL_EOL();
         #endif
 
-        temp_ms = ms + 2000UL;
+        next_temp_ms = ms + 2000UL;
+
+        #if WATCH_THE_BED || WATCH_HOTENDS
+          if (!heated && input > next_watch_temp) {
+            if (input > watch_temp_target) heated = true;
+            next_watch_temp = input + watch_temp_increase;
+            temp_change_ms = ms + watch_temp_period * 1000UL;
+          }
+          else if (!heated && ELAPSED(ms, temp_change_ms))
+            _temp_error(hotend, PSTR(MSG_T_HEATING_FAILED), PSTR(MSG_HEATING_FAILED_LCD));
+          else if (heated && input < temp - MAX_OVERSHOOT_PID_AUTOTUNE)
+            _temp_error(hotend, PSTR(MSG_T_THERMAL_RUNAWAY), PSTR(MSG_THERMAL_RUNAWAY));
+        #endif
       } // every 2 seconds
       // Timeout after 20 minutes since the last undershoot/overshoot cycle
       if (((ms - t1) + (ms - t2)) > (20L * 60L * 1000L)) {
@@ -422,7 +472,7 @@ uint8_t Temperature::soft_pwm_amount[HOTENDS],
           bedKp = workKp; \
           bedKi = scalePID_i(workKi); \
           bedKd = scalePID_d(workKd); \
-          updatePID(); }while(0)
+          }while(0)
 
         #define _SET_EXTRUDER_PID() do { \
           PID_PARAM(Kp, hotend) = workKp; \
@@ -457,14 +507,6 @@ uint8_t Temperature::soft_pwm_amount[HOTENDS],
  */
 
 Temperature::Temperature() { }
-
-void Temperature::updatePID() {
-  #if ENABLED(PIDTEMP)
-    #if ENABLED(PID_EXTRUSION_SCALING)
-      last_e_position = 0;
-    #endif
-  #endif
-}
 
 int Temperature::getHeaterPower(int heater) {
   return heater < 0 ? soft_pwm_amount_bed : soft_pwm_amount[heater];
@@ -773,7 +815,8 @@ void Temperature::manage_heater() {
       // Get the delayed info and add 100 to reconstitute to a percent of
       // the nominal filament diameter then square it to get an area
       const float vmroot = measurement_delay[meas_shift_index] * 0.01 + 1.0;
-      volumetric_multiplier[FILAMENT_SENSOR_EXTRUDER_NUM] = vmroot <= 0.1 ? 0.01 : sq(vmroot);
+      planner.volumetric_multiplier[FILAMENT_SENSOR_EXTRUDER_NUM] = vmroot <= 0.1 ? 0.01 : sq(vmroot);
+      planner.refresh_e_factor(FILAMENT_SENSOR_EXTRUDER_NUM);
     }
   #endif // FILAMENT_WIDTH_SENSOR
 
@@ -1771,8 +1814,8 @@ void Temperature::isr() {
 
     // Macros for Slow PWM timer logic
     #define _SLOW_PWM_ROUTINE(NR, src) \
-      soft_pwm_ ##NR = src; \
-      if (soft_pwm_ ##NR > 0) { \
+      soft_pwm_count_ ##NR = src; \
+      if (soft_pwm_count_ ##NR > 0) { \
         if (state_timer_heater_ ##NR == 0) { \
           if (state_heater_ ##NR == 0) state_timer_heater_ ##NR = MIN_STATE_TIME; \
           state_heater_ ##NR = 1; \
@@ -1789,7 +1832,7 @@ void Temperature::isr() {
     #define SLOW_PWM_ROUTINE(n) _SLOW_PWM_ROUTINE(n, soft_pwm_amount[n])
 
     #define PWM_OFF_ROUTINE(NR) \
-      if (soft_pwm_ ##NR < slow_pwm_count) { \
+      if (soft_pwm_count_ ##NR < slow_pwm_count) { \
         if (state_timer_heater_ ##NR == 0) { \
           if (state_heater_ ##NR == 1) state_timer_heater_ ##NR = MIN_STATE_TIME; \
           state_heater_ ##NR = 0; \
