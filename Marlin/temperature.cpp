@@ -32,7 +32,7 @@
 #include "language.h"
 
 #if ENABLED(HEATER_0_USES_MAX6675)
-  #include "spi.h"
+  #include "MarlinSPI.h"
 #endif
 
 #if ENABLED(BABYSTEPPING)
@@ -814,8 +814,9 @@ void Temperature::manage_heater() {
 
       // Get the delayed info and add 100 to reconstitute to a percent of
       // the nominal filament diameter then square it to get an area
-      const float vmroot = measurement_delay[meas_shift_index] * 0.01 + 1.0;
-      planner.volumetric_multiplier[FILAMENT_SENSOR_EXTRUDER_NUM] = vmroot <= 0.1 ? 0.01 : sq(vmroot);
+      float vmroot = measurement_delay[meas_shift_index] * 0.01 + 1.0;
+      NOLESS(vmroot, 0.1);
+      planner.volumetric_multiplier[FILAMENT_SENSOR_EXTRUDER_NUM] = 1.0 / CIRCLE_AREA(vmroot / 2);
       planner.refresh_e_factor(FILAMENT_SENSOR_EXTRUDER_NUM);
     }
   #endif // FILAMENT_WIDTH_SENSOR
@@ -1746,15 +1747,15 @@ void Temperature::isr() {
 
       #if ENABLED(FAN_SOFT_PWM)
         #if HAS_FAN0
-          soft_pwm_count_fan[0] = (soft_pwm_count_fan[0] & pwm_mask) + soft_pwm_amount_fan[0] >> 1;
+          soft_pwm_count_fan[0] = (soft_pwm_count_fan[0] & pwm_mask) + (soft_pwm_amount_fan[0] >> 1);
           WRITE_FAN(soft_pwm_count_fan[0] > pwm_mask ? HIGH : LOW);
         #endif
         #if HAS_FAN1
-          soft_pwm_count_fan[1] = (soft_pwm_count_fan[1] & pwm_mask) + soft_pwm_amount_fan[1] >> 1;
+          soft_pwm_count_fan[1] = (soft_pwm_count_fan[1] & pwm_mask) + (soft_pwm_amount_fan[1] >> 1);
           WRITE_FAN1(soft_pwm_count_fan[1] > pwm_mask ? HIGH : LOW);
         #endif
         #if HAS_FAN2
-          soft_pwm_count_fan[2] = (soft_pwm_count_fan[2] & pwm_mask) + soft_pwm_amount_fan[2] >> 1;
+          soft_pwm_count_fan[2] = (soft_pwm_count_fan[2] & pwm_mask) + (soft_pwm_amount_fan[2] >> 1);
           WRITE_FAN2(soft_pwm_count_fan[2] > pwm_mask ? HIGH : LOW);
         #endif
       #endif

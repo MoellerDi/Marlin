@@ -345,7 +345,6 @@ void report_current_position();
 
 #if HAS_BED_PROBE
   extern float zprobe_zoffset;
-  void refresh_zprobe_zoffset(const bool no_babystep=false);
   #define DEPLOY_PROBE() set_probe_deployed(true)
   #define STOW_PROBE() set_probe_deployed(false)
 #else
@@ -439,6 +438,7 @@ void do_blocking_move_to_xy(const float &x, const float &y, const float &fr_mm_s
       || ENABLED(NOZZLE_CLEAN_FEATURE)                                             \
       || ENABLED(NOZZLE_PARK_FEATURE)                                              \
       || (ENABLED(ADVANCED_PAUSE_FEATURE) && ENABLED(HOME_BEFORE_FILAMENT_CHANGE)) \
+      || HAS_M206_COMMAND                                                          \
     ) || ENABLED(NO_MOTION_BEFORE_HOMING)
 
 #if HAS_AXIS_UNHOMED_ERR

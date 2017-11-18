@@ -215,8 +215,8 @@ MarlinSettings settings;
 #endif
 
 /**
-* Post-process after Retrieve or Reset
-*/
+ * Post-process after Retrieve or Reset
+ */
 void MarlinSettings::postprocess() {
   // steps per s2 needs to be updated to agree with units per s2
   planner.reset_acceleration_rates();
@@ -244,10 +244,6 @@ void MarlinSettings::postprocess() {
 
   #if ENABLED(ENABLE_LEVELING_FADE_HEIGHT)
     set_z_fade_height(new_z_fade_height);
-  #endif
-
-  #if HAS_BED_PROBE
-    refresh_zprobe_zoffset();
   #endif
 
   #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
@@ -1808,8 +1804,8 @@ void MarlinSettings::reset() {
         CONFIG_ECHO_START;
         SERIAL_ECHOLNPGM("Material heatup parameters:");
       }
-      CONFIG_ECHO_START;
       for (uint8_t i = 0; i < COUNT(lcd_preheat_hotend_temp); i++) {
+        CONFIG_ECHO_START;
         SERIAL_ECHOPAIR("  M145 S", (int)i);
         SERIAL_ECHOPAIR(" H", TEMP_UNIT(lcd_preheat_hotend_temp[i]));
         SERIAL_ECHOPAIR(" B", TEMP_UNIT(lcd_preheat_bed_temp[i]));

@@ -1276,19 +1276,25 @@ inline void get_serial_commands() {
           || ((sd_char == '#' || sd_char == ':') && !sd_comment_mode)
       ) {
         if (card_eof) {
-          SERIAL_PROTOCOLLNPGM(MSG_FILE_PRINTED);
+
           card.printingHasFinished();
-          #if ENABLED(PRINTER_EVENT_LEDS)
-            LCD_MESSAGEPGM(MSG_INFO_COMPLETED_PRINTS);
-            set_led_color(0, 255, 0); // Green
-            #if HAS_RESUME_CONTINUE
-              enqueue_and_echo_commands_P(PSTR("M0")); // end of the queue!
-            #else
-              safe_delay(1000);
+
+          if (card.sdprinting)
+            sd_count = 0; // If a sub-file was printing, continue from call point
+          else {
+            SERIAL_PROTOCOLLNPGM(MSG_FILE_PRINTED);
+            #if ENABLED(PRINTER_EVENT_LEDS)
+              LCD_MESSAGEPGM(MSG_INFO_COMPLETED_PRINTS);
+              set_led_color(0, 255, 0); // Green
+              #if HAS_RESUME_CONTINUE
+                enqueue_and_echo_commands_P(PSTR("M0")); // end of the queue!
+              #else
+                safe_delay(1000);
+              #endif
+              set_led_color(0, 0, 0);   // OFF
             #endif
-            set_led_color(0, 0, 0);   // OFF
-          #endif
-          card.checkautostart(true);
+            card.checkautostart(true);
+          }
         }
         else if (n == -1) {
           SERIAL_ERROR_START();
@@ -3653,7 +3659,7 @@ inline void gcode_G4() {
 #if ENABLED(CNC_COORDINATE_SYSTEMS)
 
   /**
-   * Select a coordinate system and update the current position.
+   * Select a coordinate system and update the workspace offset.
    * System index -1 is used to specify machine-native.
    */
   bool select_coordinate_system(const int8_t _new) {
@@ -3664,16 +3670,13 @@ inline void gcode_G4() {
     if (WITHIN(_new, 0, MAX_COORDINATE_SYSTEMS - 1))
       COPY(new_offset, coordinate_system[_new]);
     active_coordinate_system = _new;
-    bool didXYZ = false;
     LOOP_XYZ(i) {
       const float diff = new_offset[i] - old_offset[i];
       if (diff) {
         position_shift[i] += diff;
         update_software_endstops((AxisEnum)i);
-        didXYZ = true;
       }
     }
-    if (didXYZ) SYNC_PLAN_POSITION_KINEMATIC();
     return true;
   }
 
@@ -6257,7 +6260,12 @@ inline void gcode_G92() {
     #define IS_G92_0 true
   #endif
 
-  bool didXYZ = false, didE = false;
+  bool didE = false;
+  #if IS_SCARA || !HAS_POSITION_SHIFT
+    bool didXYZ = false;
+  #else
+    constexpr bool didXYZ = false;
+  #endif
 
   if (IS_G92_0) LOOP_XYZE(i) {
     if (parser.seenval(axis_codes[i])) {
@@ -6265,18 +6273,18 @@ inline void gcode_G92() {
                   v = i == E_AXIS ? l : LOGICAL_TO_NATIVE(l, i),
                   d = v - current_position[i];
       if (!NEAR_ZERO(d)) {
-        if (i == E_AXIS) didE = true; else didXYZ = true;
-        #if IS_SCARA
-          current_position[i] = v;        // For SCARA just set the position directly
+        #if IS_SCARA || !HAS_POSITION_SHIFT
+          if (i == E_AXIS) didE = true; else didXYZ = true;
+          current_position[i] = v;        // Without workspaces revert to Marlin 1.0 behavior
         #elif HAS_POSITION_SHIFT
-          if (i == E_AXIS)
+          if (i == E_AXIS) {
+            didE = true;
             current_position[E_AXIS] = v; // When using coordinate spaces, only E is set directly
+          }
           else {
             position_shift[i] += d;       // Other axes simply offset the coordinate space
             update_software_endstops((AxisEnum)i);
           }
-        #else
-          current_position[i] = v;        // Without workspaces revert to Marlin 1.0 behavior
         #endif
       }
     }
@@ -6895,19 +6903,23 @@ inline void gcode_M31() {
 
   /**
    * M32: Select file and start SD Print
+   *
+   * Examples:
+   *
+   *    M32 !PATH/TO/FILE.GCO#      ; Start FILE.GCO
+   *    M32 P !PATH/TO/FILE.GCO#    ; Start FILE.GCO as a procedure
+   *    M32 S60 !PATH/TO/FILE.GCO#  ; Start FILE.GCO at byte 60
+   *
    */
   inline void gcode_M32() {
-    if (card.sdprinting)
-      stepper.synchronize();
-
-    char* namestartpos = parser.string_arg;
-    const bool call_procedure = parser.boolval('P');
+    if (card.sdprinting) stepper.synchronize();
 
     if (card.cardOK) {
-      card.openFile(namestartpos, true, call_procedure);
+      const bool call_procedure = parser.boolval('P');
 
-      if (parser.seenval('S'))
-        card.setIndex(parser.value_long());
+      card.openFile(parser.string_arg, true, call_procedure);
+
+      if (parser.seenval('S')) card.setIndex(parser.value_long());
 
       card.startFileprint();
 
@@ -7790,7 +7802,6 @@ inline void gcode_M105() {
     if (p < FAN_COUNT) {
       #if ENABLED(EXTRA_FAN_SPEED)
         const int16_t t = parser.intval('T');
-        NOMORE(t, 255);
         if (t > 0) {
           switch (t) {
             case 1:
@@ -7801,7 +7812,7 @@ inline void gcode_M105() {
               fanSpeeds[p] = new_fanSpeeds[p];
               break;
             default:
-              new_fanSpeeds[p] = t;
+              new_fanSpeeds[p] = min(t, 255);
               break;
           }
           return;
@@ -8463,7 +8474,7 @@ void report_current_position() {
   SERIAL_PROTOCOLPGM("X:");
   SERIAL_PROTOCOL(LOGICAL_X_POSITION(current_position[X_AXIS]));
   SERIAL_PROTOCOLPGM(" Y:");
-  SERIAL_PROTOCOL(LOGICAL_X_POSITION(current_position[Y_AXIS]));
+  SERIAL_PROTOCOL(LOGICAL_Y_POSITION(current_position[Y_AXIS]));
   SERIAL_PROTOCOLPGM(" Z:");
   SERIAL_PROTOCOL(LOGICAL_Z_POSITION(current_position[Z_AXIS]));
   SERIAL_PROTOCOLPGM(" E:");
@@ -8508,15 +8519,18 @@ void report_current_position() {
     SERIAL_PROTOCOLPGM("Raw:    ");
     report_xyz(current_position);
 
-    SERIAL_PROTOCOLPGM("Leveled:");
     float leveled[XYZ] = { current_position[X_AXIS], current_position[Y_AXIS], current_position[Z_AXIS] };
-    planner.apply_leveling(leveled);
-    report_xyz(leveled);
 
-    SERIAL_PROTOCOLPGM("UnLevel:");
-    float unleveled[XYZ] = { leveled[X_AXIS], leveled[Y_AXIS], leveled[Z_AXIS] };
-    planner.unapply_leveling(unleveled);
-    report_xyz(unleveled);
+    #if PLANNER_LEVELING
+      SERIAL_PROTOCOLPGM("Leveled:");
+      planner.apply_leveling(leveled);
+      report_xyz(leveled);
+
+      SERIAL_PROTOCOLPGM("UnLevel:");
+      float unleveled[XYZ] = { leveled[X_AXIS], leveled[Y_AXIS], leveled[Z_AXIS] };
+      planner.unapply_leveling(unleveled);
+      report_xyz(unleveled);
+    #endif
 
     #if IS_KINEMATIC
       #if IS_SCARA
@@ -8928,8 +8942,8 @@ inline void gcode_M205() {
         set_home_offset((AxisEnum)i, parser.value_linear_units());
 
     #if ENABLED(MORGAN_SCARA)
-      if (parser.seen('T')) set_home_offset(A_AXIS, parser.value_linear_units()); // Theta
-      if (parser.seen('P')) set_home_offset(B_AXIS, parser.value_linear_units()); // Psi
+      if (parser.seen('T')) set_home_offset(A_AXIS, parser.value_float()); // Theta
+      if (parser.seen('P')) set_home_offset(B_AXIS, parser.value_float()); // Psi
     #endif
 
     report_current_position();
@@ -9305,23 +9319,18 @@ inline void gcode_M226() {
     #if ENABLED(BABYSTEP_XY)
       for (uint8_t a = X_AXIS; a <= Z_AXIS; a++)
         if (parser.seenval(axis_codes[a]) || (a == Z_AXIS && parser.seenval('S'))) {
-          const float offs = constrain(parser.value_axis_units(a), -2, 2);
+          const float offs = constrain(parser.value_axis_units((AxisEnum)a), -2, 2);
+          thermalManager.babystep_axis((AxisEnum)a, offs * planner.axis_steps_per_mm[a]);
           #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
-            if (a == Z_AXIS) {
-              zprobe_zoffset += offs;
-              refresh_zprobe_zoffset(true); // 'true' to not babystep
-            }
+            zprobe_zoffset += offs;
           #endif
-          thermalManager.babystep_axis(a, offs * planner.axis_steps_per_mm[a]);
         }
     #else
       if (parser.seenval('Z') || parser.seenval('S')) {
         const float offs = constrain(parser.value_axis_units(Z_AXIS), -2, 2);
+        thermalManager.babystep_axis(Z_AXIS, offs * planner.axis_steps_per_mm[Z_AXIS]);
         #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
           zprobe_zoffset += offs;
-          refresh_zprobe_zoffset(); // This will babystep the axis
-        #else
-          thermalManager.babystep_axis(Z_AXIS, parser.value_axis_units(Z_AXIS) * planner.axis_steps_per_mm[Z_AXIS]);
         #endif
       }
     #endif
@@ -9680,6 +9689,7 @@ inline void gcode_M400() { stepper.synchronize(); }
   inline void gcode_M404() {
     if (parser.seen('W')) {
       filament_width_nominal = parser.value_linear_units();
+      planner.volumetric_area_nominal = CIRCLE_AREA(filament_width_nominal * 0.5);
     }
     else {
       SERIAL_PROTOCOLPGM("Filament dia (nominal mm):");
@@ -9957,31 +9967,27 @@ void quickstop_stepper() {
    *       Use M206 to set these values directly.
    */
   inline void gcode_M428() {
-    bool err = false;
+    if (axis_unhomed_error()) return;
+
+    float diff[XYZ];
     LOOP_XYZ(i) {
-      if (axis_homed[i]) {
-        const float base = (current_position[i] > (soft_endstop_min[i] + soft_endstop_max[i]) * 0.5) ? base_home_pos((AxisEnum)i) : 0,
-                    diff = base - current_position[i];
-        if (WITHIN(diff, -20, 20)) {
-          set_home_offset((AxisEnum)i, diff);
-        }
-        else {
-          SERIAL_ERROR_START();
-          SERIAL_ERRORLNPGM(MSG_ERR_M428_TOO_FAR);
-          LCD_ALERTMESSAGEPGM("Err: Too far!");
-          BUZZ(200, 40);
-          err = true;
-          break;
-        }
+      diff[i] = base_home_pos((AxisEnum)i) - current_position[i];
+      if (!WITHIN(diff[i], -20, 20) && home_dir((AxisEnum)i) > 0)
+        diff[i] = -current_position[i];
+      if (!WITHIN(diff[i], -20, 20)) {
+        SERIAL_ERROR_START();
+        SERIAL_ERRORLNPGM(MSG_ERR_M428_TOO_FAR);
+        LCD_ALERTMESSAGEPGM("Err: Too far!");
+        BUZZ(200, 40);
+        return;
       }
     }
 
-    if (!err) {
-      report_current_position();
-      LCD_MESSAGEPGM(MSG_HOME_OFFSETS_APPLIED);
-      BUZZ(100, 659);
-      BUZZ(100, 698);
-    }
+    LOOP_XYZ(i) set_home_offset((AxisEnum)i, diff[i]);
+    report_current_position();
+    LCD_MESSAGEPGM(MSG_HOME_OFFSETS_APPLIED);
+    BUZZ(100, 659);
+    BUZZ(100, 698);
   }
 
 #endif // HAS_M206_COMMAND
@@ -10029,42 +10035,6 @@ inline void gcode_M502() {
 
 #if HAS_BED_PROBE
 
-  void refresh_zprobe_zoffset(const bool no_babystep/*=false*/) {
-    static float last_zoffset = NAN;
-
-    if (!isnan(last_zoffset)) {
-
-      #if ENABLED(AUTO_BED_LEVELING_BILINEAR) || ENABLED(BABYSTEP_ZPROBE_OFFSET) || ENABLED(DELTA)
-        const float diff = zprobe_zoffset - last_zoffset;
-      #endif
-
-      #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
-        // Correct bilinear grid for new probe offset
-        if (diff) {
-          for (uint8_t x = 0; x < GRID_MAX_POINTS_X; x++)
-            for (uint8_t y = 0; y < GRID_MAX_POINTS_Y; y++)
-              z_values[x][y] -= diff;
-        }
-        #if ENABLED(ABL_BILINEAR_SUBDIVISION)
-          bed_level_virt_interpolate();
-        #endif
-      #endif
-
-      #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
-        if (!no_babystep && planner.leveling_active)
-          thermalManager.babystep_axis(Z_AXIS, -LROUND(diff * planner.axis_steps_per_mm[Z_AXIS]));
-      #else
-        UNUSED(no_babystep);
-      #endif
-
-      #if ENABLED(DELTA) // correct the delta_height
-        delta_height -= diff;
-      #endif
-    }
-
-    last_zoffset = zprobe_zoffset;
-  }
-
   inline void gcode_M851() {
     SERIAL_ECHO_START();
     SERIAL_ECHOPGM(MSG_ZPROBE_ZOFFSET " ");
@@ -10072,7 +10042,6 @@ inline void gcode_M502() {
       const float value = parser.value_linear_units();
       if (WITHIN(value, Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX)) {
         zprobe_zoffset = value;
-        refresh_zprobe_zoffset();
         SERIAL_ECHO(zprobe_zoffset);
       }
       else
@@ -10315,25 +10284,30 @@ inline void gcode_M502() {
     SERIAL_ECHOLNPGM(" prewarn flag cleared");
   }
 
-  static void tmc2130_get_pwmthrs(TMC2130Stepper &st, const char name, const uint16_t spmm) {
-    SERIAL_CHAR(name);
-    SERIAL_ECHOPGM(" stealthChop max speed set to ");
-    SERIAL_ECHOLN(12650000UL * st.microsteps() / (256 * st.stealth_max_speed() * spmm));
-  }
-  static void tmc2130_set_pwmthrs(TMC2130Stepper &st, const char name, const int32_t thrs, const uint32_t spmm) {
-    st.stealth_max_speed(12650000UL * st.microsteps() / (256 * thrs * spmm));
-    tmc2130_get_pwmthrs(st, name, spmm);
-  }
+  #if ENABLED(HYBRID_THRESHOLD)
+    static void tmc2130_get_pwmthrs(TMC2130Stepper &st, const char name, const uint16_t spmm) {
+      SERIAL_CHAR(name);
+      SERIAL_ECHOPGM(" stealthChop max speed set to ");
+      SERIAL_ECHOLN(12650000UL * st.microsteps() / (256 * st.stealth_max_speed() * spmm));
+    }
 
-  static void tmc2130_get_sgt(TMC2130Stepper &st, const char name) {
-    SERIAL_CHAR(name);
-    SERIAL_ECHOPGM(" driver homing sensitivity set to ");
-    SERIAL_ECHOLN(st.sgt());
-  }
-  static void tmc2130_set_sgt(TMC2130Stepper &st, const char name, const int8_t sgt_val) {
-    st.sgt(sgt_val);
-    tmc2130_get_sgt(st, name);
-  }
+    static void tmc2130_set_pwmthrs(TMC2130Stepper &st, const char name, const int32_t thrs, const uint32_t spmm) {
+      st.stealth_max_speed(12650000UL * st.microsteps() / (256 * thrs * spmm));
+      tmc2130_get_pwmthrs(st, name, spmm);
+    }
+  #endif
+
+  #if ENABLED(SENSORLESS_HOMING)
+    static void tmc2130_get_sgt(TMC2130Stepper &st, const char name) {
+      SERIAL_CHAR(name);
+      SERIAL_ECHOPGM(" driver homing sensitivity set to ");
+      SERIAL_ECHOLN(st.sgt());
+    }
+    static void tmc2130_set_sgt(TMC2130Stepper &st, const char name, const int8_t sgt_val) {
+      st.sgt(sgt_val);
+      tmc2130_get_sgt(st, name);
+    }
+  #endif
 
   /**
    * M906: Set motor current in milliamps using axis codes X, Y, Z, E
@@ -13308,48 +13282,27 @@ void prepare_move_to_destination() {
         #if !AVR_AT90USB1286_FAMILY
           case TIMER0A:
         #endif
-        case TIMER0B:
-          //_SET_CS(0, val);
-          break;
+        case TIMER0B:                           //_SET_CS(0, val);
+                                                  break;
       #endif
-      #ifdef TCCR1A
-        case TIMER1A:
-        case TIMER1B:
-          //_SET_CS(1, val);
-          break;
+      #ifdef TCCR1A 
+        case TIMER1A: case TIMER1B:             //_SET_CS(1, val);
+                                                  break;
       #endif
-      #ifdef TCCR2
-        case TIMER2:
-        case TIMER2:
-          _SET_CS(2, val);
-          break;
+      #ifdef TCCR2 
+        case TIMER2: case TIMER2:                 _SET_CS(2, val); break;
       #endif
-      #ifdef TCCR2A
-        case TIMER2A:
-        case TIMER2B:
-          _SET_CS(2, val);
-          break;
+      #ifdef TCCR2A 
+        case TIMER2A: case TIMER2B:               _SET_CS(2, val); break;
       #endif
-      #ifdef TCCR3A
-        case TIMER3A:
-        case TIMER3B:
-        case TIMER3C:
-          _SET_CS(3, val);
-          break;
+      #ifdef TCCR3A 
+        case TIMER3A: case TIMER3B: case TIMER3C: _SET_CS(3, val); break;
       #endif
-      #ifdef TCCR4A
-        case TIMER4A:
-        case TIMER4B:
-        case TIMER4C:
-          _SET_CS(4, val);
-          break;
+      #ifdef TCCR4A 
+        case TIMER4A: case TIMER4B: case TIMER4C: _SET_CS(4, val); break;
       #endif
-      #ifdef TCCR5A
-        case TIMER5A:
-        case TIMER5B:
-        case TIMER5C:
-          _SET_CS(5, val);
-          break;
+      #ifdef TCCR5A 
+        case TIMER5A: case TIMER5B: case TIMER5C: _SET_CS(5, val); break;
       #endif
     }
   }
@@ -13791,7 +13744,7 @@ void setup() {
     Max7219_init();
   #endif
 
-  #ifdef DISABLE_JTAG
+  #if ENABLED(DISABLE_JTAG)
     // Disable JTAG on AT90USB chips to free up pins for IO
     MCUCR = 0x80;
     MCUCR = 0x80;
