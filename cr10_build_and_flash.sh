@@ -1,5 +1,7 @@
 #/bin/bash
 
+YOUR_API_KEY= <add your own api key here>
+
 LOCALREPO=/tmp/CR10-Firmware
 
 REPOSRC=https://github.com/MoellerDi/Marlin.git
@@ -21,3 +23,11 @@ fi
 # run platformio to build firmware
 pio run -e cr10
 
+# disconnect octoprint to allow programmer to connect
+curl -s -H "Content-Type: application/json" -H "X-Api-Key: $YOUR_API_KEY" -X POST -d '{ "command":"disconnect" }' http://octopi.local/api/connection
+
+# upload firmware to CR-10
+#pio run -e cr10 -t upload
+
+# re-connect octoprint
+curl -s -H "Content-Type: application/json" -H "X-Api-Key: $YOUR_API_KEY" -X POST -d '{ "command":"connect" }' http://octopi.local/api/connection
