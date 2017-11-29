@@ -25,9 +25,11 @@ pio run -e cr10
 
 # disconnect octoprint to allow programmer to connect
 curl -s -H "Content-Type: application/json" -H "X-Api-Key: $YOUR_API_KEY" -X POST -d '{ "command":"disconnect" }' http://octopi.local/api/connection
+sleep 2
 
 # upload firmware to CR-10
 #pio run -e cr10 -t upload
 
 # re-connect octoprint
+sleep 5
 curl -s -H "Content-Type: application/json" -H "X-Api-Key: $YOUR_API_KEY" -X POST -d '{ "command":"connect" }' http://octopi.local/api/connection
