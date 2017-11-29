@@ -1,14 +1,17 @@
 #/bin/bash
 
-YOUR_API_KEY= <add your own api key here>
+#####################################
 
-LOCALREPO=/tmp/CR10-Firmware
+YOUR_API_KEY= <add your own api key here>
 
 REPOSRC=https://github.com/MoellerDi/Marlin.git
 BRANCH=bugfix-1.1.x-HD-CR10
 
-#####################################################################
-# We do it this way so that we can abstract if from just git later on
+LOCALREPO=/tmp/CR10-Firmware
+
+#####################################
+### DO NOT MODIFY BELOW THIS LINE ###
+#####################################
 LOCALREPO_VC_DIR=$LOCALREPO/.git
 
 if [ ! -d $LOCALREPO_VC_DIR ]
