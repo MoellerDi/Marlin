@@ -312,7 +312,7 @@ void lcd_printPGM_utf(const char *str, uint8_t n=LCD_WIDTH) {
 
     u8g.firstPage();
     do {
-      u8g.drawBitmapP(offx, offy, START_BMPBYTEWIDTH, START_BMPHEIGHT, start_bmp);
+      u8g.drawBitmapP(offx, offy, (START_BMPWIDTH + 7) / 8, START_BMPHEIGHT, start_bmp);
       lcd_setFont(FONT_MENU);
       #ifndef STRING_SPLASH_LINE2
         u8g.drawStr(txt1X, u8g.getHeight() - (DOG_CHAR_HEIGHT), STRING_SPLASH_LINE1);
@@ -492,7 +492,7 @@ static void lcd_implementation_status_screen() {
 
   if (PAGE_UNDER(STATUS_SCREENHEIGHT + 1)) {
 
-    u8g.drawBitmapP(9, 1, STATUS_SCREENBYTEWIDTH, STATUS_SCREENHEIGHT,
+    u8g.drawBitmapP(9, 1, (STATUS_SCREENWIDTH + 7) / 8, STATUS_SCREENHEIGHT,
       #if HAS_FAN0
         blink && fanSpeeds[0] ? status_screen0_bmp : status_screen1_bmp
       #else
@@ -650,10 +650,12 @@ static void lcd_implementation_status_screen() {
     strcpy(zstring, ftostr52sp(FIXFLOAT(LOGICAL_Z_POSITION(current_position[Z_AXIS]))));
     #if ENABLED(FILAMENT_LCD_DISPLAY)
       strcpy(wstring, ftostr12ns(filament_width_meas));
-      if (parser.volumetric_enabled)
-        strcpy(mstring, itostr3(100.0 * planner.volumetric_area_nominal / planner.volumetric_multiplier[FILAMENT_SENSOR_EXTRUDER_NUM]));
-      else
-        strcpy_P(mstring, PSTR("---"));
+      strcpy(mstring, itostr3(100.0 * (
+          parser.volumetric_enabled
+            ? planner.volumetric_area_nominal / planner.volumetric_multiplier[FILAMENT_SENSOR_EXTRUDER_NUM]
+            : planner.volumetric_multiplier[FILAMENT_SENSOR_EXTRUDER_NUM]
+        )
+      ));
     #endif
   }
 

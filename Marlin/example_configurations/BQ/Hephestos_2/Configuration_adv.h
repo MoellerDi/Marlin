@@ -482,6 +482,23 @@
 // The timeout (in ms) to return to the status screen from sub-menus
 //#define LCD_TIMEOUT_TO_STATUS 15000
 
+/**
+ * LED Control Menu
+ * Enable this feature to add LED Control to the LCD menu
+ */
+//#define LED_CONTROL_MENU
+#if ENABLED(LED_CONTROL_MENU)
+  #define LED_COLOR_PRESETS                 // Enable the Preset Color menu option
+  #if ENABLED(LED_COLOR_PRESETS)
+    #define LED_USER_PRESET_RED        255  // User defined RED value
+    #define LED_USER_PRESET_GREEN      128  // User defined GREEN value
+    #define LED_USER_PRESET_BLUE         0  // User defined BLUE value
+    #define LED_USER_PRESET_WHITE      255  // User defined WHITE value
+    #define LED_USER_PRESET_BRIGHTNESS 255  // User defined intensity
+    //#define LED_USER_PRESET_STARTUP       // Have the printer display the user preset color on startup
+  #endif
+#endif // LED_CONTROL_MENU
+
 #if ENABLED(SDSUPPORT)
 
   // Some RAMPS and other boards don't detect when an SD card is inserted. You can work
@@ -554,6 +571,9 @@
     // Add a menu item to test the progress bar:
     //#define LCD_PROGRESS_BAR_TEST
   #endif
+
+  // Add an 'M73' G-code to set the current percentage
+  //#define LCD_SET_PROGRESS_MANUALLY
 
   // This allows hosts to request long names for files and folders with M33
   #define LONG_FILENAME_HOST_SUPPORT
@@ -722,7 +742,7 @@
 //#define BEZIER_CURVE_SUPPORT
 
 // G38.2 and G38.3 Probe Target
-// Enable PROBE_DOUBLE_TOUCH if you want G38 to double touch
+// Set MULTIPLE_PROBING if you want G38 to double touch
 //#define G38_PROBE_TARGET
 #if ENABLED(G38_PROBE_TARGET)
   #define G38_MINIMUM_MOVE 0.0275 // minimum distance in mm that will produce a move (determined using the print statement in check_move)
