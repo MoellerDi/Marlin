@@ -561,8 +561,8 @@
  * Override with M203
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4]]]]
  */
-//#define DEFAULT_MAX_FEEDRATE          { 500, 500, 15, 25 } //stock values
-#define DEFAULT_MAX_FEEDRATE          { 300, 300, 5, 25 }
+#define DEFAULT_MAX_FEEDRATE          { 500, 500, 15, 25 } //stock values
+//#define DEFAULT_MAX_FEEDRATE          { 300, 300, 5, 25 } // testing
 
 /**
  * Default Max Acceleration (change/s) change = mm/s
@@ -572,8 +572,8 @@
  */
 //#define DEFAULT_MAX_ACCELERATION      { 3000, 3000, 100, 5000 }  //default conf
 //#define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 1000, 5000 } // TDH conf
-//#define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 100, 5000 }  //stock values
-#define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 100, 25 }
+#define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 100, 5000 }  //stock values
+//#define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 100, 25 } // testing
 
 /**
  * Default Acceleration (change/s) change = mm/s
