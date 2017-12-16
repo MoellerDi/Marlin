@@ -724,7 +724,6 @@ void stop();
 void get_available_commands();
 void process_next_command();
 void process_parsed_command();
-void prepare_move_to_destination();
 
 void get_cartesian_from_steppers();
 void set_current_from_steppers_for_axis(const AxisEnum axis);
@@ -1532,9 +1531,6 @@ inline void buffer_line_to_current_position() {
 inline void buffer_line_to_destination(const float fr_mm_s) {
   planner.buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], fr_mm_s, active_extruder);
 }
-
-inline void set_current_from_destination() { COPY(current_position, destination); }
-inline void set_destination_from_current() { COPY(destination, current_position); }
 
 #if IS_KINEMATIC
   /**
@@ -3364,8 +3360,12 @@ inline void gcode_G0_G1(
     #endif
 
     #if ENABLED(NANODLP_Z_SYNC)
-      // If G0/G1 command include Z-axis, wait for move and output sync text.
-      if (parser.seenval('Z')) {
+      #if ENABLED(NANODLP_ALL_AXIS)
+        #define _MOVE_SYNC true                 // For any move wait and output sync message
+      #else
+        #define _MOVE_SYNC parser.seenval('Z')  // Only for Z move
+      #endif
+      if (_MOVE_SYNC) {
         stepper.synchronize();
         SERIAL_ECHOLNPGM(MSG_Z_MOVE_COMP);
       }
@@ -3484,6 +3484,9 @@ inline void gcode_G4() {
   if (parser.seenval('S')) dwell_ms = parser.value_millis_from_seconds(); // seconds to wait
 
   stepper.synchronize();
+  #if ENABLED(NANODLP_Z_SYNC)
+    SERIAL_ECHOLNPGM(MSG_Z_MOVE_COMP);
+  #endif
 
   if (!lcd_hasstatus()) LCD_MESSAGEPGM(MSG_DWELL);
 
@@ -4154,6 +4157,16 @@ inline void gcode_G28(const bool always_home_all) {
   lcd_refresh();
 
   report_current_position();
+
+  #if ENABLED(NANODLP_Z_SYNC)
+    #if ENABLED(NANODLP_ALL_AXIS)
+      #define _HOME_SYNC true                 // For any axis, output sync text.
+    #else
+      #define _HOME_SYNC (home_all || homeZ)  // Only for Z-axis
+    #endif
+    if (_HOME_SYNC)
+      SERIAL_ECHOLNPGM(MSG_Z_MOVE_COMP);
+  #endif
 
   #if ENABLED(DEBUG_LEVELING_FEATURE)
     if (DEBUGGING(LEVELING)) SERIAL_ECHOLNPGM("<<< gcode_G28");
