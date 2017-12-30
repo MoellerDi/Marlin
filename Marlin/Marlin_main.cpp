@@ -5818,7 +5818,7 @@ void home_all_axes() { gcode_G28(true); }
 
     // Report settings
 
-    const char *checkingac = PSTR("Checking... AC"); // TODO: Make translatable string
+    PGM_P checkingac = PSTR("Checking... AC"); // TODO: Make translatable string
     serialprintPGM(checkingac);
     if (verbose_level == 0) SERIAL_PROTOCOLPGM(" (DRY-RUN)");
     SERIAL_EOL();
@@ -6000,7 +6000,7 @@ void home_all_axes() { gcode_G28(true); }
         }
       }
       else {                                                       // dry run
-        const char *enddryrun = PSTR("End DRY-RUN");
+        PGM_P enddryrun = PSTR("End DRY-RUN");
         serialprintPGM(enddryrun);
         SERIAL_PROTOCOL_SP(35);
         SERIAL_PROTOCOLPGM("std dev:");
@@ -6426,10 +6426,7 @@ inline void gcode_M17() {
 #if ENABLED(ADVANCED_PAUSE_FEATURE)
 
   static float resume_position[XYZE];
-  static bool move_away_flag = false;
-  #if ENABLED(SDSUPPORT)
-    static bool sd_print_paused = false;
-  #endif
+  static int8_t did_pause_print = 0;
 
   static void filament_change_beep(const int8_t max_beep_count, const bool init=false) {
     static millis_t next_buzz = 0;
@@ -6482,7 +6479,7 @@ inline void gcode_M17() {
   static bool pause_print(const float &retract, const point_t &park_point, const float &unload_length = 0,
                           const int8_t max_beep_count = 0, const bool show_lcd = false
   ) {
-    if (move_away_flag) return false; // already paused
+    if (did_pause_print) return false; // already paused
 
     #ifdef ACTION_ON_PAUSE
       SERIAL_ECHOLNPGM("//action:" ACTION_ON_PAUSE);
@@ -6502,13 +6499,13 @@ inline void gcode_M17() {
     }
 
     // Indicate that the printer is paused
-    move_away_flag = true;
+    ++did_pause_print;
 
     // Pause the print job and timer
     #if ENABLED(SDSUPPORT)
       if (card.sdprinting) {
         card.pauseSDPrint();
-        sd_print_paused = true;
+        ++did_pause_print;
       }
     #endif
     print_job_timer.pause();
@@ -6627,7 +6624,7 @@ inline void gcode_M17() {
   static void resume_print(const float &load_length = 0, const float &initial_extrude_length = 0, const int8_t max_beep_count = 0) {
     bool nozzle_timed_out = false;
 
-    if (!move_away_flag) return;
+    if (!did_pause_print) return;
 
     // Re-enable the heaters if they timed out
     HOTEND_LOOP() {
@@ -6724,14 +6721,14 @@ inline void gcode_M17() {
       SERIAL_ECHOLNPGM("//action:" ACTION_ON_RESUME);
     #endif
 
+    --did_pause_print;
+
     #if ENABLED(SDSUPPORT)
-      if (sd_print_paused) {
+      if (did_pause_print) {
         card.startFileprint();
-        sd_print_paused = false;
+        --did_pause_print;
       }
     #endif
-
-    move_away_flag = false;
   }
 #endif // ADVANCED_PAUSE_FEATURE
 
@@ -8445,6 +8442,7 @@ inline void gcode_M114() {
   static void cap_line(const char * const name, bool ena=false) {
     SERIAL_PROTOCOLPGM("Cap:");
     serialprintPGM(name);
+    SERIAL_PROTOCOLPGM(":");
     SERIAL_PROTOCOLLN(int(ena ? 1 : 0));
   }
 #endif
@@ -10008,6 +10006,7 @@ inline void gcode_M502() {
    *  U[distance] - Retract distance for removal (negative value) (manual reload)
    *  L[distance] - Extrude distance for insertion (positive value) (manual reload)
    *  B[count]    - Number of times to beep, -1 for indefinite (if equipped with a buzzer)
+   *  T[toolhead] - Select extruder for filament change
    *
    *  Default values are used for omitted arguments.
    *
@@ -10018,6 +10017,18 @@ inline void gcode_M502() {
     #if ENABLED(HOME_BEFORE_FILAMENT_CHANGE)
       // Don't allow filament change without homing first
       if (axis_unhomed_error()) home_all_axes();
+    #endif
+
+    #if EXTRUDERS > 1
+      // Change toolhead if specified
+      uint8_t active_extruder_before_filament_change = -1;
+      if (parser.seen('T')) {
+        const uint8_t extruder = parser.value_byte();
+        if (active_extruder != extruder) {
+          active_extruder_before_filament_change = active_extruder;
+          tool_change(extruder, 0, true);
+        }
+      }
     #endif
 
     // Initial retract before move to filament change position
@@ -10071,6 +10082,12 @@ inline void gcode_M502() {
       wait_for_filament_reload(beep_count);
       resume_print(load_length, ADVANCED_PAUSE_EXTRUDE_LENGTH, beep_count);
     }
+
+    #if EXTRUDERS > 1
+      // Restore toolhead if it was changed
+      if (active_extruder_before_filament_change >= 0)
+        tool_change(active_extruder_before_filament_change, 0, true);
+    #endif
 
     // Resume the print job timer if it was running
     if (job_running) print_job_timer.start();
@@ -14030,7 +14047,7 @@ void manage_inactivity(bool ignore_stepper_queue/*=false*/) {
 
   // Prevent steppers timing-out in the middle of M600
   #if ENABLED(ADVANCED_PAUSE_FEATURE) && ENABLED(PAUSE_PARK_NO_STEPPER_TIMEOUT)
-    #define MOVE_AWAY_TEST !move_away_flag
+    #define MOVE_AWAY_TEST !did_pause_print
   #else
     #define MOVE_AWAY_TEST true
   #endif
