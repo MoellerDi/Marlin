@@ -1545,7 +1545,7 @@ inline void buffer_line_to_current_position() {
  * Move the planner to the position stored in the destination array, which is
  * used by G0/G1/G2/G3/G5 and many other functions to set a destination.
  */
-inline void buffer_line_to_destination(const float &fr_mm_s=feedrate_mm_s) {
+inline void buffer_line_to_destination(const float &fr_mm_s) {
   planner.buffer_line(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS], destination[E_AXIS], fr_mm_s, active_extruder);
 }
 
@@ -6783,13 +6783,25 @@ inline void gcode_M17() {
       lcd_advanced_pause_show_message(ADVANCED_PAUSE_MESSAGE_RESUME);
     #endif
 
-    // Set extruder to saved position
-    destination[E_AXIS] = current_position[E_AXIS] = resume_position[E_AXIS];
-    planner.set_e_position_mm(current_position[E_AXIS]);
+    // Intelligent resuming
+    #if ENABLED(FWRETRACT)
+      // If retracted before goto pause
+      if (retracted[active_extruder])
+        do_pause_e_move(-retract_length, retract_feedrate_mm_s);
+    #else
+      // If resume_position negative
+      if (resume_position[E_AXIS] < 0) do_pause_e_move(resume_position[E_AXIS], PAUSE_PARK_RETRACT_FEEDRATE);
+    #endif
 
     // Move XY to starting position, then Z
     do_blocking_move_to_xy(resume_position[X_AXIS], resume_position[Y_AXIS], NOZZLE_PARK_XY_FEEDRATE);
+
+    // Set Z_AXIS to saved position
     do_blocking_move_to_z(resume_position[Z_AXIS], NOZZLE_PARK_Z_FEEDRATE);
+
+    // Now all extrusion positions are resumed and ready to be confirmed
+    // Set extruder to saved position
+    planner.set_e_position_mm((destination[E_AXIS] = current_position[E_AXIS] = resume_position[E_AXIS]));
 
     #if ENABLED(FILAMENT_RUNOUT_SENSOR)
       filament_ran_out = false;
@@ -9456,7 +9468,7 @@ inline void gcode_M226() {
 /**
  * M303: PID relay autotune
  *
- *       S<temperature> sets the target temperature. (default 150C)
+ *       S<temperature> sets the target temperature. (default 150C / 70C)
  *       E<extruder> (-1 for the bed) (default 0)
  *       C<cycles>
  *       U<bool> with a non-zero value will apply the result to current settings
@@ -10285,7 +10297,7 @@ inline void gcode_M502() {
   inline void gcode_M701() {
     point_t park_point = NOZZLE_PARK_POINT;
 
-    if (get_target_extruder_from_command(200)) return;
+    if (get_target_extruder_from_command(701)) return;
 
     // Z axis lift
     if (parser.seenval('Z')) park_point.z = parser.linearval('Z');
