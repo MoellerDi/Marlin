@@ -56,6 +56,10 @@
   #include "mesh_bed_leveling.h"
 #endif
 
+#if ENABLED(FWRETRACT)
+  #include "fwretract.h"
+#endif
+
 #if ENABLED(AUTO_BED_LEVELING_UBL) || ENABLED(G26_MESH_VALIDATION)
   bool lcd_external_control; // = false
 #endif
@@ -2299,7 +2303,6 @@ void kill_screen(const char* lcd_msg) {
       MENU_BACK(MSG_UBL_LEVEL_BED);
       if (!WITHIN(ubl_storage_slot, 0, a - 1)) {
         STATIC_ITEM(MSG_NO_STORAGE);
-        STATIC_ITEM(MSG_INIT_EEPROM);
       }
       else {
         MENU_ITEM_EDIT(int3, MSG_UBL_STORAGE_SLOT, &ubl_storage_slot, 0, a - 1);
@@ -2348,7 +2351,6 @@ void kill_screen(const char* lcd_msg) {
      * UBL LCD "radar" map
      */
     void set_current_from_steppers_for_axis(const AxisEnum axis);
-    void sync_plan_position();
 
     void _lcd_do_nothing() {}
     void _lcd_hard_stop() {
@@ -3748,20 +3750,20 @@ void kill_screen(const char* lcd_msg) {
     void lcd_control_retract_menu() {
       START_MENU();
       MENU_BACK(MSG_CONTROL);
-      MENU_ITEM_EDIT(bool, MSG_AUTORETRACT, &autoretract_enabled);
-      MENU_ITEM_EDIT(float52, MSG_CONTROL_RETRACT, &retract_length, 0, 100);
+      MENU_ITEM_EDIT(bool, MSG_AUTORETRACT, &fwretract.autoretract_enabled);
+      MENU_ITEM_EDIT(float52, MSG_CONTROL_RETRACT, &fwretract.retract_length, 0, 100);
       #if EXTRUDERS > 1
-        MENU_ITEM_EDIT(float52, MSG_CONTROL_RETRACT_SWAP, &swap_retract_length, 0, 100);
+        MENU_ITEM_EDIT(float52, MSG_CONTROL_RETRACT_SWAP, &fwretract.swap_retract_length, 0, 100);
       #endif
-      MENU_ITEM_EDIT(float3, MSG_CONTROL_RETRACTF, &retract_feedrate_mm_s, 1, 999);
-      MENU_ITEM_EDIT(float52, MSG_CONTROL_RETRACT_ZLIFT, &retract_zlift, 0, 999);
-      MENU_ITEM_EDIT(float52, MSG_CONTROL_RETRACT_RECOVER, &retract_recover_length, -100, 100);
+      MENU_ITEM_EDIT(float3, MSG_CONTROL_RETRACTF, &fwretract.retract_feedrate_mm_s, 1, 999);
+      MENU_ITEM_EDIT(float52, MSG_CONTROL_RETRACT_ZLIFT, &fwretract.retract_zlift, 0, 999);
+      MENU_ITEM_EDIT(float52, MSG_CONTROL_RETRACT_RECOVER, &fwretract.retract_recover_length, -100, 100);
       #if EXTRUDERS > 1
-        MENU_ITEM_EDIT(float52, MSG_CONTROL_RETRACT_RECOVER_SWAP, &swap_retract_recover_length, -100, 100);
+        MENU_ITEM_EDIT(float52, MSG_CONTROL_RETRACT_RECOVER_SWAP, &fwretract.swap_retract_recover_length, -100, 100);
       #endif
-      MENU_ITEM_EDIT(float3, MSG_CONTROL_RETRACT_RECOVERF, &retract_recover_feedrate_mm_s, 1, 999);
+      MENU_ITEM_EDIT(float3, MSG_CONTROL_RETRACT_RECOVERF, &fwretract.retract_recover_feedrate_mm_s, 1, 999);
       #if EXTRUDERS > 1
-        MENU_ITEM_EDIT(float3, MSG_CONTROL_RETRACT_RECOVER_SWAPF, &swap_retract_recover_feedrate_mm_s, 1, 999);
+        MENU_ITEM_EDIT(float3, MSG_CONTROL_RETRACT_RECOVER_SWAPF, &fwretract.swap_retract_recover_feedrate_mm_s, 1, 999);
       #endif
       END_MENU();
     }
@@ -4535,6 +4537,24 @@ void kill_screen(const char* lcd_msg) {
       END_SCREEN();
     }
 
+    FORCE_INLINE screenFunc_t ap_message_screen(const AdvancedPauseMessage message) {
+      switch (message) {
+        case ADVANCED_PAUSE_MESSAGE_INIT: return lcd_advanced_pause_init_message;
+        case ADVANCED_PAUSE_MESSAGE_UNLOAD: return lcd_advanced_pause_unload_message;
+        case ADVANCED_PAUSE_MESSAGE_INSERT: return lcd_advanced_pause_insert_message;
+        case ADVANCED_PAUSE_MESSAGE_LOAD: return lcd_advanced_pause_load_message;
+        case ADVANCED_PAUSE_MESSAGE_PURGE: return lcd_advanced_pause_purge_message;
+        case ADVANCED_PAUSE_MESSAGE_RESUME: return lcd_advanced_pause_resume_message;
+        case ADVANCED_PAUSE_MESSAGE_CLICK_TO_HEAT_NOZZLE: return lcd_advanced_pause_heat_nozzle;
+        case ADVANCED_PAUSE_MESSAGE_WAIT_FOR_NOZZLES_TO_HEAT: return lcd_advanced_pause_wait_for_nozzles_to_heat;
+        case ADVANCED_PAUSE_MESSAGE_OPTION: advanced_pause_menu_response = ADVANCED_PAUSE_RESPONSE_WAIT_FOR;
+                                            return lcd_advanced_pause_option_menu;
+        case ADVANCED_PAUSE_MESSAGE_STATUS:
+        default: break;
+      }
+      return NULL;
+    }
+
     void lcd_advanced_pause_show_message(
       const AdvancedPauseMessage message,
       const AdvancedPauseMode mode/*=ADVANCED_PAUSE_MODE_PAUSE_PRINT*/,
@@ -4542,48 +4562,13 @@ void kill_screen(const char* lcd_msg) {
     ) {
       advanced_pause_mode = mode;
       hotend_status_extruder = extruder;
-      switch (message) {
-        case ADVANCED_PAUSE_MESSAGE_INIT:
-          defer_return_to_status = true;
-          lcd_goto_screen(lcd_advanced_pause_init_message);
-          break;
-        case ADVANCED_PAUSE_MESSAGE_UNLOAD:
-          defer_return_to_status = true;
-          lcd_goto_screen(lcd_advanced_pause_unload_message);
-          break;
-        case ADVANCED_PAUSE_MESSAGE_INSERT:
-          defer_return_to_status = true;
-          lcd_goto_screen(lcd_advanced_pause_insert_message);
-          break;
-        case ADVANCED_PAUSE_MESSAGE_LOAD:
-          defer_return_to_status = true;
-          lcd_goto_screen(lcd_advanced_pause_load_message);
-          break;
-        case ADVANCED_PAUSE_MESSAGE_PURGE:
-          defer_return_to_status = true;
-          lcd_goto_screen(lcd_advanced_pause_purge_message);
-          break;
-        case ADVANCED_PAUSE_MESSAGE_CLICK_TO_HEAT_NOZZLE:
-          defer_return_to_status = true;
-          lcd_goto_screen(lcd_advanced_pause_heat_nozzle);
-          break;
-        case ADVANCED_PAUSE_MESSAGE_WAIT_FOR_NOZZLES_TO_HEAT:
-          defer_return_to_status = true;
-          lcd_goto_screen(lcd_advanced_pause_wait_for_nozzles_to_heat);
-          break;
-        case ADVANCED_PAUSE_MESSAGE_OPTION:
-          defer_return_to_status = true;
-          advanced_pause_menu_response = ADVANCED_PAUSE_RESPONSE_WAIT_FOR;
-          lcd_goto_screen(lcd_advanced_pause_option_menu);
-          break;
-        case ADVANCED_PAUSE_MESSAGE_RESUME:
-          defer_return_to_status = true;
-          lcd_goto_screen(lcd_advanced_pause_resume_message);
-          break;
-        case ADVANCED_PAUSE_MESSAGE_STATUS:
-          lcd_return_to_status();
-          break;
+      const screenFunc_t next_screen = ap_message_screen(message);
+      if (next_screen) {
+        defer_return_to_status = true;
+        lcd_goto_screen(next_screen);
       }
+      else
+        lcd_return_to_status();
     }
 
   #endif // ADVANCED_PAUSE_FEATURE
@@ -4958,6 +4943,7 @@ void lcd_update() {
     if (sd_status != lcd_sd_status && lcd_detected()) {
 
       if (sd_status) {
+        safe_delay(1000); // some boards need a delay or the LCD won't show the new status
         card.initsd();
         if (lcd_sd_status != 2) LCD_MESSAGEPGM(MSG_SD_INSERTED);
       }
