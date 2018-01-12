@@ -241,6 +241,8 @@
   #error "ANET_KEYPAD_LCD is now ZONESTAR_LCD. Please update your configuration."
 #elif defined(MEASURED_LOWER_LIMIT) || defined(MEASURED_UPPER_LIMIT)
   #error "MEASURED_(UPPER|LOWER)_LIMIT is now FILWIDTH_ERROR_MARGIN. Please update your configuration."
+#elif defined(AUTOMATIC_CURRENT_CONTROL)
+  #error "AUTOMATIC_CURRENT_CONTROL is now MONITOR_DRIVER_STATUS. Please update your configuration."
 #endif
 
 /**
@@ -275,8 +277,8 @@
   #elif TX_BUFFER_SIZE && (TX_BUFFER_SIZE < 2 || TX_BUFFER_SIZE > 256 || !IS_POWER_OF_2(TX_BUFFER_SIZE))
     #error "TX_BUFFER_SIZE must be 0, a power of 2 greater than 1, and no greater than 256."
   #endif
-#elif ENABLED(SERIAL_XON_XOFF)
-  #error "SERIAL_XON_XOFF is not supported on USB-native AVR devices."
+#elif ENABLED(SERIAL_XON_XOFF) || ENABLED(SERIAL_STATS_MAX_RX_QUEUED) || ENABLED(SERIAL_STATS_DROPPED_RX)
+  #error "SERIAL_XON_XOFF and SERIAL_STATS_* features not supported on USB-native AVR devices."
 #endif
 
 /**
@@ -1444,30 +1446,26 @@ static_assert(1 >= 0
 /**
  * Make sure HAVE_TMC2130 is warranted
  */
-#if ENABLED(HAVE_TMC2130)
-  #if !( ENABLED(  X_IS_TMC2130 ) \
-      || ENABLED( X2_IS_TMC2130 ) \
-      || ENABLED(  Y_IS_TMC2130 ) \
-      || ENABLED( Y2_IS_TMC2130 ) \
-      || ENABLED(  Z_IS_TMC2130 ) \
-      || ENABLED( Z2_IS_TMC2130 ) \
-      || ENABLED( E0_IS_TMC2130 ) \
-      || ENABLED( E1_IS_TMC2130 ) \
-      || ENABLED( E2_IS_TMC2130 ) \
-      || ENABLED( E3_IS_TMC2130 ) \
-      || ENABLED( E4_IS_TMC2130 ) )
-    #error "HAVE_TMC2130 requires at least one TMC2130 stepper to be set."
-  #elif ENABLED(HYBRID_THRESHOLD) && DISABLED(STEALTHCHOP)
-    #error "Enable STEALTHCHOP to use HYBRID_THRESHOLD."
-  #elif defined(AUTOMATIC_CURRENT_CONTROL)
-    #error "AUTOMATIC_CURRENT_CONTROL is now MONITOR_DRIVER_STATUS. Please update your configuration."
-  #endif
+#if ENABLED(HAVE_TMC2130) && !( \
+       ENABLED(  X_IS_TMC2130 ) \
+    || ENABLED( X2_IS_TMC2130 ) \
+    || ENABLED(  Y_IS_TMC2130 ) \
+    || ENABLED( Y2_IS_TMC2130 ) \
+    || ENABLED(  Z_IS_TMC2130 ) \
+    || ENABLED( Z2_IS_TMC2130 ) \
+    || ENABLED( E0_IS_TMC2130 ) \
+    || ENABLED( E1_IS_TMC2130 ) \
+    || ENABLED( E2_IS_TMC2130 ) \
+    || ENABLED( E3_IS_TMC2130 ) \
+    || ENABLED( E4_IS_TMC2130 ) )
+  #error "HAVE_TMC2130 requires at least one TMC2130 stepper to be set."
+#elif ENABLED(SENSORLESS_HOMING) && DISABLED(HAVE_TMC2130)
+  #error "Enable HAVE_TMC2130 to use SENSORLESS_HOMING."
 #endif
 
 /**
  * Make sure HAVE_TMC2208 is warranted
  */
-
 #if ENABLED(HAVE_TMC2208) && !( \
        ENABLED(  X_IS_TMC2208 ) \
     || ENABLED( X2_IS_TMC2208 ) \
@@ -1484,6 +1482,10 @@ static_assert(1 >= 0
 
 #if ENABLED(HYBRID_THRESHOLD) && DISABLED(STEALTHCHOP)
   #error "Enable STEALTHCHOP to use HYBRID_THRESHOLD."
+#endif
+
+#if ENABLED(TMC_Z_CALIBRATION) && !Z_IS_TRINAMIC && !Z2_IS_TRINAMIC
+  #error "TMC_Z_CALIBRATION requires at least one TMC driver on Z axis"
 #endif
 
 /**

@@ -20,22 +20,31 @@
  *
  */
 
-#ifndef MARLIN_CONFIG_H
-#define MARLIN_CONFIG_H
+/**
+ * Melzi (Malyan M150) pin assignments
+ */
 
-#include "fastio.h"
-#include "macros.h"
-#include "boards.h"
-#include "Version.h"
-#include "Configuration.h"
-#include "Conditionals_LCD.h"
-#include "Configuration_adv.h"
-#include "pins.h"
-#ifndef USBCON
-  #define HardwareSerial_h // trick to disable the standard HWserial
-#endif
-#include "Arduino.h"
-#include "Conditionals_post.h"
-#include "SanityCheck.h"
+#define BOARD_NAME "Melzi (Malyan)"
+#define IS_MELZI
 
-#endif // MARLIN_CONFIG_H
+#include "pins_SANGUINOLOLU_12.h"
+
+#undef LCD_SDSS
+#undef LCD_PINS_RS
+#undef LCD_PINS_ENABLE
+#undef LCD_PINS_D4
+#undef BTN_EN1
+#undef BTN_EN2
+#undef BTN_ENC
+
+#define LCD_PINS_RS     17 // st9720 CS
+#define LCD_PINS_ENABLE 16 // st9720 DAT
+#define LCD_PINS_D4     11 // st9720 CLK
+#define BTN_EN1         30
+#define BTN_EN2         29
+#define BTN_ENC         28
+
+// Alter timing for graphical display
+#define ST7920_DELAY_1 DELAY_2_NOP
+#define ST7920_DELAY_2 DELAY_2_NOP
+#define ST7920_DELAY_3 DELAY_2_NOP
