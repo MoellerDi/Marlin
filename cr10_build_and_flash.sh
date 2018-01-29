@@ -5,7 +5,7 @@
 YOUR_API_KEY= <add your own api key here>
 
 REPOSRC=https://github.com/MoellerDi/Marlin.git
-BRANCH=bugfix-1.1.x-HD-CR10
+BRANCH=bugfix-1.1.x-HD-MKSGen14
 
 LOCALREPO=/tmp/CR10-Firmware
 
@@ -28,7 +28,7 @@ curl -s -H "Content-Type: application/json" -H "X-Api-Key: $YOUR_API_KEY" -X POS
 sleep 2
 
 # build and upload firmware to CR-10
-pio run -e cr10 -t upload
+pio run -e megaatmega2560 -t upload
 
 # re-connect octoprint
 sleep 5
