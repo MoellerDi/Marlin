@@ -576,7 +576,7 @@
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4]]]]
  */
 //#define DEFAULT_MAX_FEEDRATE          { 500, 500, 5, 25 } //stock values
-#define DEFAULT_MAX_FEEDRATE          { 300, 300, 5, 50 } // testing
+#define DEFAULT_MAX_FEEDRATE          { 500, 500, 5, 50 } // testing
 
 /**
  * Default Max Acceleration (change/s) change = mm/s
