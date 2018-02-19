@@ -185,7 +185,7 @@
  */
 //#define USE_CONTROLLER_FAN
 #if ENABLED(USE_CONTROLLER_FAN)
-  //#define CONTROLLER_FAN_PIN FAN1_PIN  // Set a custom pin for the controller fan
+  //#define CONTROLLER_FAN_PIN -1        // Set a custom pin for the controller fan
   #define CONTROLLERFAN_SECS 60          // Duration in seconds for the fan to run after all motors are disabled
   #define CONTROLLERFAN_SPEED 255        // 255 == full speed
 #endif
@@ -362,6 +362,9 @@
 // When G28 is called, this option will make Y home before X
 //#define HOME_Y_BEFORE_X
 
+// Enable this if X or Y can't home without homing the other axis first.
+//#define CODEPENDENT_XY_HOMING
+
 // @section machine
 
 #define AXIS_RELATIVE_MODES {false, false, false, false}
@@ -489,6 +492,9 @@
 // The timeout (in ms) to return to the status screen from sub-menus
 //#define LCD_TIMEOUT_TO_STATUS 15000
 
+// Add an 'M73' G-code to set the current percentage
+//#define LCD_SET_PROGRESS_MANUALLY
+
 /**
  * LED Control Menu
  * Enable this feature to add LED Control to the LCD menu
@@ -578,9 +584,6 @@
     // Add a menu item to test the progress bar:
     //#define LCD_PROGRESS_BAR_TEST
   #endif
-
-  // Add an 'M73' G-code to set the current percentage
-  //#define LCD_SET_PROGRESS_MANUALLY
 
   // This allows hosts to request long names for files and folders with M33
   //#define LONG_FILENAME_HOST_SUPPORT
@@ -1580,17 +1583,17 @@
  */
 #define MAX7219_DEBUG
 #if ENABLED(MAX7219_DEBUG)
-//#define MAX7219_CLK_PIN   64  // on RAMPS       // Configuration of the 3 pins to control the display
-//#define MAX7219_DIN_PIN   57  // on RAMPS
-//#define MAX7219_LOAD_PIN  44  // on RAMPS
+#define MAX7219_CLK_PIN   64  // on RAMPS       // Configuration of the 3 pins to control the display
+#define MAX7219_DIN_PIN   57  // on RAMPS
+#define MAX7219_LOAD_PIN  44  // on RAMPS
 
 //#define MAX7219_CLK_PIN   77 // on Re-ARM       // Configuration of the 3 pins to control the display
 //#define MAX7219_DIN_PIN   78 // on Re-ARM
 //#define MAX7219_LOAD_PIN  79 // on Re-ARM
 
-  #define MAX7219_CLK_PIN   30 // for RAMPS E1     // Configuration of the 3 pins to control the display
-  #define MAX7219_DIN_PIN   34 // for RAMPS E1
-  #define MAX7219_LOAD_PIN  36 // for RAMPS E1
+//#define MAX7219_CLK_PIN   30 // for RAMPS E1     // Configuration of the 3 pins to control the display
+//#define MAX7219_DIN_PIN   34 // for RAMPS E1
+//#define MAX7219_LOAD_PIN  36 // for RAMPS E1
 
   /**
    * Sample debug features

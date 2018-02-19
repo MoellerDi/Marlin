@@ -101,7 +101,7 @@
  * M34  - Set SD Card sorting options. (Requires SDCARD_SORT_ALPHA)
  * M42  - Change pin status via gcode: M42 P<pin> S<value>. LED pin assumed if P is omitted.
  * M43  - Display pin status, watch pins for changes, watch endstops & toggle LED, Z servo probe test, toggle pins
- * M48  - Measure Z Probe repeatability: M48 P<points> X<pos> Y<pos> V<level> E<engage> L<legs>. (Requires Z_MIN_PROBE_REPEATABILITY_TEST)
+ * M48  - Measure Z Probe repeatability: M48 P<points> X<pos> Y<pos> V<level> E<engage> L<legs> S<chizoid>. (Requires Z_MIN_PROBE_REPEATABILITY_TEST)
  * M75  - Start the print job timer.
  * M76  - Pause the print job timer.
  * M77  - Stop the print job timer.
@@ -487,7 +487,7 @@ float soft_endstop_min[XYZ] = { X_MIN_BED, Y_MIN_BED, Z_MIN_POS },
   #endif
 #endif
 
-#if HAS_CONTROLLERFAN
+#if ENABLED(USE_CONTROLLER_FAN)
   int controllerFanSpeed = 0;
 #endif
 
@@ -924,15 +924,30 @@ void setup_killpin() {
 
 #if ENABLED(FILAMENT_RUNOUT_SENSOR)
 
-  void setup_filrunoutpin() {
-    #if ENABLED(ENDSTOPPULLUP_FIL_RUNOUT)
-      SET_INPUT_PULLUP(FIL_RUNOUT_PIN);
+  void setup_filament_runout_pins() {
+
+    #if ENABLED(FIL_RUNOUT_PULLUP)
+      #define INIT_RUNOUT_PIN(P) SET_INPUT_PULLUP(P)
     #else
-      SET_INPUT(FIL_RUNOUT_PIN);
+      #define INIT_RUNOUT_PIN(P) SET_INPUT(P)
+    #endif
+
+    INIT_RUNOUT_PIN(FIL_RUNOUT_PIN);
+    #if NUM_RUNOUT_SENSORS > 1
+      INIT_RUNOUT_PIN(FIL_RUNOUT2_PIN);
+      #if NUM_RUNOUT_SENSORS > 2
+        INIT_RUNOUT_PIN(FIL_RUNOUT3_PIN);
+        #if NUM_RUNOUT_SENSORS > 3
+          INIT_RUNOUT_PIN(FIL_RUNOUT4_PIN);
+          #if NUM_RUNOUT_SENSORS > 4
+            INIT_RUNOUT_PIN(FIL_RUNOUT5_PIN);
+          #endif
+        #endif
+      #endif
     #endif
   }
 
-#endif
+#endif // FILAMENT_RUNOUT_SENSOR
 
 void setup_powerhold() {
   #if HAS_SUICIDE
@@ -1030,7 +1045,7 @@ inline void get_serial_commands() {
   #if NO_TIMEOUTS > 0
     static millis_t last_command_time = 0;
     const millis_t ms = millis();
-    if (commands_in_queue == 0 && !MYSERIAL.available() && ELAPSED(ms, last_command_time + NO_TIMEOUTS)) {
+    if (commands_in_queue == 0 && !MYSERIAL0.available() && ELAPSED(ms, last_command_time + NO_TIMEOUTS)) {
       SERIAL_ECHOLNPGM(MSG_WAIT);
       last_command_time = ms;
     }
@@ -1040,7 +1055,7 @@ inline void get_serial_commands() {
    * Loop while serial characters are incoming and the queue is not full
    */
   int c;
-  while (commands_in_queue < BUFSIZE && (c = MYSERIAL.read()) >= 0) {
+  while (commands_in_queue < BUFSIZE && (c = MYSERIAL0.read()) >= 0) {
 
     char serial_char = c;
 
@@ -1136,7 +1151,7 @@ inline void get_serial_commands() {
       // The command will be injected when EOL is reached
     }
     else if (serial_char == '\\') {   // Handle escapes
-      if ((c = MYSERIAL.read()) >= 0 && !serial_comment_mode) // if we have one more character, copy it over
+      if ((c = MYSERIAL0.read()) >= 0 && !serial_comment_mode) // if we have one more character, copy it over
         serial_line_buffer[serial_count++] = (char)c;
       // otherwise do nothing
     }
@@ -2092,8 +2107,15 @@ static void clean_up_after_endstop_or_probe_move() {
 
     if (endstops.z_probe_enabled == deploy) return false;
 
-    // Make room for probe
-    do_probe_raise(_Z_CLEARANCE_DEPLOY_PROBE);
+    // Fix-mounted probe should only raise for deploy
+    #if ENABLED(FIX_MOUNTED_PROBE)
+      #define RAISE_COND deploy
+    #else
+      #define RAISE_COND true
+    #endif
+
+    // Make room for probe to deploy (or stow)
+    if (RAISE_COND) do_probe_raise(_Z_CLEARANCE_DEPLOY_PROBE);
 
     #if ENABLED(Z_PROBE_SLED) || ENABLED(Z_PROBE_ALLEN_KEY)
       #if ENABLED(Z_PROBE_SLED)
@@ -3599,6 +3621,9 @@ inline void gcode_G4() {
     do_blocking_move_to_xy(1.5 * mlx * x_axis_home_dir, 1.5 * mly * home_dir(Y_AXIS), fr_mm_s);
     endstops.hit_on_purpose(); // clear endstop hit flags
     current_position[X_AXIS] = current_position[Y_AXIS] = 0.0;
+    #if ENABLED(SENSORLESS_HOMING)
+      safe_delay(500); // Short delay needed to settle
+    #endif
   }
 
 #endif // QUICK_HOME
@@ -3867,6 +3892,10 @@ inline void gcode_G4() {
         active_extruder_parked = false;
       #endif
 
+      #if ENABLED(SENSORLESS_HOMING)
+        safe_delay(500); // Short delay needed to settle
+      #endif
+
       do_blocking_move_to_xy(destination[X_AXIS], destination[Y_AXIS]);
       HOMEAXIS(Z);
     }
@@ -3965,12 +3994,7 @@ inline void gcode_G28(const bool always_home_all) {
 
     #if Z_HOME_DIR > 0  // If homing away from BED do Z first
 
-      if (home_all || homeZ) {
-        HOMEAXIS(Z);
-        #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (DEBUGGING(LEVELING)) DEBUG_POS("> HOMEAXIS(Z)", current_position);
-        #endif
-      }
+      if (home_all || homeZ) HOMEAXIS(Z);
 
     #endif
 
@@ -3994,20 +4018,23 @@ inline void gcode_G28(const bool always_home_all) {
 
     #endif
 
+    // Home Y (before X)
     #if ENABLED(HOME_Y_BEFORE_X)
 
-      // Home Y
-      if (home_all || homeY) {
-        HOMEAXIS(Y);
-        #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (DEBUGGING(LEVELING)) DEBUG_POS("> homeY", current_position);
+      if (home_all || homeY
+        #if ENABLED(CODEPENDENT_XY_HOMING)
+          || homeX
         #endif
-      }
+      ) HOMEAXIS(Y);
 
     #endif
 
     // Home X
-    if (home_all || homeX) {
+    if (home_all || homeX
+      #if ENABLED(CODEPENDENT_XY_HOMING) && DISABLED(HOME_Y_BEFORE_X)
+        || homeY
+      #endif
+    ) {
 
       #if ENABLED(DUAL_X_CARRIAGE)
 
@@ -4032,20 +4059,11 @@ inline void gcode_G28(const bool always_home_all) {
         HOMEAXIS(X);
 
       #endif
-
-      #if ENABLED(DEBUG_LEVELING_FEATURE)
-        if (DEBUGGING(LEVELING)) DEBUG_POS("> homeX", current_position);
-      #endif
     }
 
+    // Home Y (after X)
     #if DISABLED(HOME_Y_BEFORE_X)
-      // Home Y
-      if (home_all || homeY) {
-        HOMEAXIS(Y);
-        #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (DEBUGGING(LEVELING)) DEBUG_POS("> homeY", current_position);
-        #endif
-      }
+      if (home_all || homeY) HOMEAXIS(Y);
     #endif
 
     // Home Z last if homing towards the bed
@@ -4055,9 +4073,6 @@ inline void gcode_G28(const bool always_home_all) {
           home_z_safely();
         #else
           HOMEAXIS(Z);
-        #endif
-        #if ENABLED(DEBUG_LEVELING_FEATURE)
-          if (DEBUGGING(LEVELING)) DEBUG_POS("> (home_all || homeZ) > final", current_position);
         #endif
       } // home_all || homeZ
     #endif // Z_HOME_DIR < 0
@@ -7342,7 +7357,7 @@ inline void gcode_M42() {
    * M48: Z probe repeatability measurement function.
    *
    * Usage:
-   *   M48 <P#> <X#> <Y#> <V#> <E> <L#>
+   *   M48 <P#> <X#> <Y#> <V#> <E> <L#> <S>
    *     P = Number of sampled points (4-50, default 10)
    *     X = Sample X position
    *     Y = Sample Y position
@@ -11981,7 +11996,7 @@ void process_next_command() {
  */
 void FlushSerialRequestResend() {
   //char command_queue[cmd_queue_index_r][100]="Resend:";
-  MYSERIAL.flush();
+  SERIAL_FLUSH();
   SERIAL_PROTOCOLPGM(MSG_RESEND);
   SERIAL_PROTOCOLLN(gcode_LastN + 1);
   ok_to_send();
@@ -13299,6 +13314,38 @@ void disable_all_steppers() {
   disable_e_steppers();
 }
 
+#if ENABLED(FILAMENT_RUNOUT_SENSOR)
+
+  FORCE_INLINE bool check_filament_runout() {
+
+    if (IS_SD_PRINTING || print_job_timer.isRunning()) {
+
+      #if NUM_RUNOUT_SENSORS < 2
+        // A single sensor applying to all extruders
+        return READ(FIL_RUNOUT_PIN) == FIL_RUNOUT_INVERTING;
+      #else
+        // Read the sensor for the active extruder
+        switch (active_extruder) {
+          case 0: return READ(FIL_RUNOUT_PIN) == FIL_RUNOUT_INVERTING;
+          case 1: return READ(FIL_RUNOUT2_PIN) == FIL_RUNOUT_INVERTING;
+          #if NUM_RUNOUT_SENSORS > 2
+            case 2: return READ(FIL_RUNOUT3_PIN) == FIL_RUNOUT_INVERTING;
+            #if NUM_RUNOUT_SENSORS > 3
+              case 3: return READ(FIL_RUNOUT4_PIN) == FIL_RUNOUT_INVERTING;
+              #if NUM_RUNOUT_SENSORS > 4
+                case 4: return READ(FIL_RUNOUT5_PIN) == FIL_RUNOUT_INVERTING;
+              #endif
+            #endif
+          #endif
+        }
+      #endif
+
+    }
+    return false;
+  }
+
+#endif // FILAMENT_RUNOUT_SENSOR
+
 /**
  * Manage several activities:
  *  - Check for Filament Runout
@@ -13314,11 +13361,7 @@ void disable_all_steppers() {
 void manage_inactivity(bool ignore_stepper_queue/*=false*/) {
 
   #if ENABLED(FILAMENT_RUNOUT_SENSOR)
-    if ((IS_SD_PRINTING || print_job_timer.isRunning())
-       && READ(FIL_RUNOUT_PIN) == FIL_RUNOUT_INVERTING
-       && thermalManager.targetHotEnoughToExtrude(active_extruder)
-    )
-      handle_filament_runout();
+    if (check_filament_runout()) handle_filament_runout();
   #endif
 
   if (commands_in_queue < BUFSIZE) get_available_commands();
@@ -13625,7 +13668,7 @@ void setup() {
   #endif
 
   #if ENABLED(FILAMENT_RUNOUT_SENSOR)
-    setup_filrunoutpin();
+    setup_filament_runout_pins();
   #endif
 
   setup_killpin();
@@ -13636,7 +13679,7 @@ void setup() {
     disableStepperDrivers();
   #endif
 
-  MYSERIAL.begin(BAUDRATE);
+  MYSERIAL0.begin(BAUDRATE);
   SERIAL_PROTOCOLLNPGM("start");
   SERIAL_ECHO_START();
 
@@ -13781,6 +13824,7 @@ void setup() {
   #endif
 
   lcd_init();
+  LCD_MESSAGEPGM(WELCOME_MSG);
 
   #if ENABLED(SHOW_BOOTSCREEN)
     lcd_bootscreen();
