@@ -369,20 +369,10 @@
 
   // If you are using a pre-configured hotend then you can use one of the value sets by uncommenting it
 
-  //HD CR-10 Stock Hotend 13V
-  #define  DEFAULT_Kp 14.77
-  #define  DEFAULT_Ki 0.90
-  #define  DEFAULT_Kd 60.50
-
-  //HD CR-10 Stock Values
-  //#define  DEFAULT_Kp 21.73
-  //#define  DEFAULT_Ki 1.54
-  //#define  DEFAULT_Kd 76.55
-  
-  // Stock CR-10 tuned for 70C
-  //#define  DEFAULT_Kp 22.57
-  //#define  DEFAULT_Ki 1.72
-  //#define  DEFAULT_Kd 73.96
+  //CR-10 Stock Hotend PSU at 13V (tuned with "M303 E0 S225 C15")
+  #define  DEFAULT_Kp 16.54
+  #define  DEFAULT_Ki 1.23
+  #define  DEFAULT_Kd 55.56
 
   // Ultimaker
   //#define  DEFAULT_Kp 22.2
@@ -427,15 +417,10 @@
 
   //#define PID_BED_DEBUG // Sends debug data to the serial port.
 
-  //HD CR-10 Stock Bed on 13V
-  #define  DEFAULT_bedKp 491.67
-  #define  DEFAULT_bedKi 58.84
-  #define  DEFAULT_bedKd 1027.10
-
-  //Stock CR-10 Bed Tuned for 70C
-  //#define  DEFAULT_bedKp 426.68
-  //#define  DEFAULT_bedKi 78.92
-  //#define  DEFAULT_bedKd 576.71
+  //CR-10 Stock Bed PSU at 13V (tuned with "M303 E-1 S70 C20")
+  #define  DEFAULT_bedKp 464.84
+  #define  DEFAULT_bedKi 91.52
+  #define  DEFAULT_bedKd 590.23
 
   //120V 250W silicone heater into 4mm borosilicate (MendelMax 1.5+)
   //from FOPDT model - kp=.39 Tp=405 Tdead=66, Tc set to 79.2, aggressive factor of .15 (vs .1, 1, 10)
