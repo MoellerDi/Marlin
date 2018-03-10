@@ -369,10 +369,10 @@
 
   // If you are using a pre-configured hotend then you can use one of the value sets by uncommenting it
 
-  //CR-10 Stock Hotend PSU at 13V (tuned with "M303 E0 S230 C15")
-  #define  DEFAULT_Kp 15.71
-  #define  DEFAULT_Ki 1.12
-  #define  DEFAULT_Kd 55.02
+  //CR-10 Stock Hotend; PSU at 13V (tuned with "M303 E0 S230 C15")
+  #define  DEFAULT_Kp 14.77
+  #define  DEFAULT_Ki 0.90
+  #define  DEFAULT_Kd 60.50
 
   // Ultimaker
   //#define  DEFAULT_Kp 22.2
@@ -417,7 +417,7 @@
 
   //#define PID_BED_DEBUG // Sends debug data to the serial port.
 
-  //CR-10 Stock Bed PSU at 13V (tuned with "M303 E-1 S70 C20")
+  //CR-10 Stock Bed; PSU at 13V (tuned with "M303 E-1 S70 C20")
   #define  DEFAULT_bedKp 464.84
   #define  DEFAULT_bedKi 91.52
   #define  DEFAULT_bedKd 590.23
