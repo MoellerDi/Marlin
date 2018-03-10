@@ -369,10 +369,10 @@
 
   // If you are using a pre-configured hotend then you can use one of the value sets by uncommenting it
 
-  //CR-10 Stock Hotend PSU at 13V (tuned with "M303 E0 S225 C15")
-  #define  DEFAULT_Kp 16.54
-  #define  DEFAULT_Ki 1.23
-  #define  DEFAULT_Kd 55.56
+  //CR-10 Stock Hotend PSU at 13V (tuned with "M303 E0 S230 C15")
+  #define  DEFAULT_Kp 15.71
+  #define  DEFAULT_Ki 1.12
+  #define  DEFAULT_Kd 55.02
 
   // Ultimaker
   //#define  DEFAULT_Kp 22.2
@@ -561,7 +561,7 @@
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4]]]]
  */
 //#define DEFAULT_MAX_FEEDRATE          { 500, 500, 5, 25 } //stock values
-#define DEFAULT_MAX_FEEDRATE          { 500, 500, 25, 50 } // testing
+#define DEFAULT_MAX_FEEDRATE          { 500, 500, 5, 50 } // testing
 
 /**
  * Default Max Acceleration (change/s) change = mm/s
