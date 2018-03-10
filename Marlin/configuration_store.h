@@ -55,7 +55,7 @@ class MarlinSettings {
         static int16_t meshes_start_index();
         FORCE_INLINE static int16_t meshes_end_index() { return meshes_end; }
         static uint16_t calc_num_meshes();
-        static uint16_t mesh_slot_offset(const int8_t slot);
+        static int mesh_slot_offset(const int8_t slot);
         static void store_mesh(const int8_t slot);
         static void load_mesh(const int8_t slot, void * const into=NULL);
 

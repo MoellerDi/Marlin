@@ -546,19 +546,19 @@ void MarlinSettings::postprocess() {
       // Write dual endstops in X, Y, Z order. Unused = 0.0
       dummy = 0.0f;
       #if ENABLED(X_DUAL_ENDSTOPS)
-        EEPROM_WRITE(x_endstop_adj);             // 1 float
+        EEPROM_WRITE(endstops.x_endstop_adj);   // 1 float
       #else
         EEPROM_WRITE(dummy);
       #endif
 
       #if ENABLED(Y_DUAL_ENDSTOPS)
-        EEPROM_WRITE(y_endstop_adj);             // 1 float
+        EEPROM_WRITE(endstops.y_endstop_adj);   // 1 float
       #else
         EEPROM_WRITE(dummy);
       #endif
 
       #if ENABLED(Z_DUAL_ENDSTOPS)
-        EEPROM_WRITE(z_endstop_adj);             // 1 float
+        EEPROM_WRITE(endstops.z_endstop_adj);   // 1 float
       #else
         EEPROM_WRITE(dummy);
       #endif
@@ -1070,17 +1070,17 @@ void MarlinSettings::postprocess() {
         _FIELD_TEST(x_endstop_adj);
 
         #if ENABLED(X_DUAL_ENDSTOPS)
-          EEPROM_READ(x_endstop_adj);             // 1 float
+          EEPROM_READ(endstops.x_endstop_adj);  // 1 float
         #else
           EEPROM_READ(dummy);
         #endif
         #if ENABLED(Y_DUAL_ENDSTOPS)
-          EEPROM_READ(y_endstop_adj);             // 1 float
+          EEPROM_READ(endstops.y_endstop_adj);  // 1 float
         #else
           EEPROM_READ(dummy);
         #endif
         #if ENABLED(Z_DUAL_ENDSTOPS)
-          EEPROM_READ(z_endstop_adj);             // 1 float
+          EEPROM_READ(endstops.z_endstop_adj); // 1 float
         #else
           EEPROM_READ(dummy);
         #endif
@@ -1482,7 +1482,7 @@ void MarlinSettings::postprocess() {
       return (meshes_end - meshes_start_index()) / sizeof(ubl.z_values);
     }
 
-    int void MarlinSettings::mesh_slot_offset(const uint8_t slot) {
+    int MarlinSettings::mesh_slot_offset(const int8_t slot) {
       return meshes_end - (slot + 1) * sizeof(ubl.z_values);
     }
 
@@ -1501,8 +1501,9 @@ void MarlinSettings::postprocess() {
           return;
         }
 
+        int pos = mesh_slot_offset(slot);
         uint16_t crc = 0;
-        write_data(mesh_slot_offset(slot), (uint8_t *)&ubl.z_values, sizeof(ubl.z_values), &crc);
+        write_data(pos, (uint8_t *)&ubl.z_values, sizeof(ubl.z_values), &crc);
 
         // Write crc to MAT along with other data, or just tack on to the beginning or end
 
@@ -1530,9 +1531,10 @@ void MarlinSettings::postprocess() {
           return;
         }
 
+        int pos = mesh_slot_offset(slot);
         uint16_t crc = 0;
         uint8_t * const dest = into ? (uint8_t*)into : (uint8_t*)&ubl.z_values;
-        read_data(mesh_slot_offset(slot), dest, sizeof(ubl.z_values), &crc);
+        read_data(pos, dest, sizeof(ubl.z_values), &crc);
 
         // Compare crc with crc from MAT, or read from end
 
@@ -1636,7 +1638,7 @@ void MarlinSettings::reset() {
   #elif ENABLED(X_DUAL_ENDSTOPS) || ENABLED(Y_DUAL_ENDSTOPS) || ENABLED(Z_DUAL_ENDSTOPS)
 
     #if ENABLED(X_DUAL_ENDSTOPS)
-      x_endstop_adj = (
+      endstops.x_endstop_adj = (
         #ifdef X_DUAL_ENDSTOPS_ADJUSTMENT
           X_DUAL_ENDSTOPS_ADJUSTMENT
         #else
@@ -1645,7 +1647,7 @@ void MarlinSettings::reset() {
       );
     #endif
     #if ENABLED(Y_DUAL_ENDSTOPS)
-      y_endstop_adj = (
+      endstops.y_endstop_adj = (
         #ifdef Y_DUAL_ENDSTOPS_ADJUSTMENT
           Y_DUAL_ENDSTOPS_ADJUSTMENT
         #else
@@ -1654,7 +1656,7 @@ void MarlinSettings::reset() {
       );
     #endif
     #if ENABLED(Z_DUAL_ENDSTOPS)
-      z_endstop_adj = (
+      endstops.z_endstop_adj = (
         #ifdef Z_DUAL_ENDSTOPS_ADJUSTMENT
           Z_DUAL_ENDSTOPS_ADJUSTMENT
         #else
@@ -2138,13 +2140,13 @@ void MarlinSettings::reset() {
       CONFIG_ECHO_START;
       SERIAL_ECHOPGM("  M666");
       #if ENABLED(X_DUAL_ENDSTOPS)
-        SERIAL_ECHOPAIR(" X", LINEAR_UNIT(x_endstop_adj));
+        SERIAL_ECHOPAIR(" X", LINEAR_UNIT(endstops.x_endstop_adj));
       #endif
       #if ENABLED(Y_DUAL_ENDSTOPS)
-        SERIAL_ECHOPAIR(" Y", LINEAR_UNIT(y_endstop_adj));
+        SERIAL_ECHOPAIR(" Y", LINEAR_UNIT(endstops.y_endstop_adj));
       #endif
       #if ENABLED(Z_DUAL_ENDSTOPS)
-        SERIAL_ECHOPAIR(" Z", LINEAR_UNIT(z_endstop_adj));
+        SERIAL_ECHOPAIR(" Z", LINEAR_UNIT(endstops.z_endstop_adj));
       #endif
       SERIAL_EOL();
     #endif // DELTA
