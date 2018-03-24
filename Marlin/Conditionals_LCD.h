@@ -376,9 +376,10 @@
 
   #define HAS_DEBUG_MENU ENABLED(LCD_PROGRESS_BAR_TEST)
 
-  // MK2 Multiplexer forces SINGLENOZZLE to be enabled
+  // MK2 Multiplexer forces SINGLENOZZLE and kills DISABLE_INACTIVE_EXTRUDER
   #if ENABLED(MK2_MULTIPLEXER)
     #define SINGLENOZZLE
+    #undef DISABLE_INACTIVE_EXTRUDER
   #endif
 
   /**
@@ -413,7 +414,7 @@
     #else
       #define E_STEPPERS    1
     #endif
-    #define E_MANUAL        E_STEPPERS
+    #define E_MANUAL        EXTRUDERS
   #elif ENABLED(MIXING_EXTRUDER)
     #define E_STEPPERS      MIXING_STEPPERS
     #define E_MANUAL        1

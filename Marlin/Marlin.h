@@ -35,7 +35,7 @@
 #include "MarlinConfig.h"
 
 #ifdef DEBUG_GCODE_PARSER
-  #include "gcode.h"
+  #include "parser.h"
 #endif
 
 #include "enum.h"
@@ -164,11 +164,6 @@ extern const char axis_codes[XYZE];
               G38_endstop_hit; // flag from the interrupt handler to indicate if the endstop went active
 #endif
 
-/**
- * The axis order in all axis related arrays is X, Y, Z, E
- */
-#define _AXIS(AXIS) AXIS ##_AXIS
-
 void enable_all_steppers();
 void disable_e_stepper(const uint8_t e);
 void disable_e_steppers();
@@ -184,7 +179,7 @@ void sync_plan_position_e();
   #define SYNC_PLAN_POSITION_KINEMATIC() sync_plan_position()
 #endif
 
-void FlushSerialRequestResend();
+void flush_and_request_resend();
 void ok_to_send();
 
 void kill(const char*);
@@ -212,8 +207,8 @@ void clear_command_queue();
   #endif
 #endif
 
-extern millis_t previous_cmd_ms;
-inline void refresh_cmd_timeout() { previous_cmd_ms = millis(); }
+extern millis_t previous_move_ms;
+inline void reset_stepper_timeout() { previous_move_ms = millis(); }
 
 /**
  * Feedrate scaling and conversion
@@ -232,7 +227,7 @@ extern volatile bool wait_for_heatup;
   extern volatile bool wait_for_user;
 #endif
 
-#if HAS_AUTO_REPORTING
+#if HAS_AUTO_REPORTING || ENABLED(HOST_KEEPALIVE_FEATURE)
   extern bool suspend_auto_report;
 #endif
 
@@ -389,6 +384,15 @@ void report_current_position();
 #if HAS_BED_PROBE
   extern float zprobe_zoffset;
   bool set_probe_deployed(const bool deploy);
+  #if Z_AFTER_PROBING
+    void move_z_after_probing();
+  #endif
+  enum ProbePtRaise : unsigned char {
+    PROBE_PT_NONE,  // No raise or stow after run_z_probe
+    PROBE_PT_STOW,  // Do a complete stow after run_z_probe
+    PROBE_PT_RAISE  // Raise to "between" clearance after run_z_probe
+  };
+  float probe_pt(const float &rx, const float &ry, const ProbePtRaise raise_after=PROBE_PT_NONE, const uint8_t verbose_level=0, const bool probe_relative=true);
   #define DEPLOY_PROBE() set_probe_deployed(true)
   #define STOW_PROBE() set_probe_deployed(false)
 #else
@@ -463,10 +467,10 @@ void prepare_move_to_destination();
 /**
  * Blocking movement and shorthand functions
  */
-void do_blocking_move_to(const float &x, const float &y, const float &z, const float &fr_mm_s=0.0);
-void do_blocking_move_to_x(const float &x, const float &fr_mm_s=0.0);
-void do_blocking_move_to_z(const float &z, const float &fr_mm_s=0.0);
-void do_blocking_move_to_xy(const float &x, const float &y, const float &fr_mm_s=0.0);
+void do_blocking_move_to(const float rx, const float ry, const float rz, const float &fr_mm_s=0.0);
+void do_blocking_move_to_x(const float &rx, const float &fr_mm_s=0.0);
+void do_blocking_move_to_z(const float &rz, const float &fr_mm_s=0.0);
+void do_blocking_move_to_xy(const float &rx, const float &ry, const float &fr_mm_s=0.0);
 
 #define HAS_AXIS_UNHOMED_ERR (                                                     \
          ENABLED(Z_PROBE_ALLEN_KEY)                                                \
@@ -494,27 +498,28 @@ void do_blocking_move_to_xy(const float &x, const float &y, const float &fr_mm_s
   #endif
 
   // Return true if the given point is within the printable area
-  inline bool position_is_reachable(const float &rx, const float &ry) {
+  inline bool position_is_reachable(const float &rx, const float &ry, const float inset=0) {
     #if ENABLED(DELTA)
-      return HYPOT2(rx, ry) <= sq(DELTA_PRINTABLE_RADIUS);
+      return HYPOT2(rx, ry) <= sq(DELTA_PRINTABLE_RADIUS - inset);
     #elif IS_SCARA
-      #if MIDDLE_DEAD_ZONE_R > 0
-        const float R2 = HYPOT2(rx - SCARA_OFFSET_X, ry - SCARA_OFFSET_Y);
-        return R2 >= sq(float(MIDDLE_DEAD_ZONE_R)) && R2 <= sq(L1 + L2);
-      #else
-        return HYPOT2(rx - SCARA_OFFSET_X, ry - SCARA_OFFSET_Y) <= sq(L1 + L2);
-      #endif
-    #else // CARTESIAN
-      // To be migrated from MakerArm branch in future
+      const float R2 = HYPOT2(rx - SCARA_OFFSET_X, ry - SCARA_OFFSET_Y);
+      return (
+        R2 <= sq(L1 + L2) - inset
+        #if MIDDLE_DEAD_ZONE_R > 0
+          && R2 >= sq(float(MIDDLE_DEAD_ZONE_R))
+        #endif
+      );
     #endif
   }
 
-  // Return true if the both nozzle and the probe can reach the given point.
-  // Note: This won't work on SCARA since the probe offset rotates with the arm.
-  inline bool position_is_reachable_by_probe(const float &rx, const float &ry) {
-    return position_is_reachable(rx, ry)
-        && position_is_reachable(rx - (X_PROBE_OFFSET_FROM_EXTRUDER), ry - (Y_PROBE_OFFSET_FROM_EXTRUDER));
-  }
+  #if HAS_BED_PROBE
+    // Return true if the both nozzle and the probe can reach the given point.
+    // Note: This won't work on SCARA since the probe offset rotates with the arm.
+    inline bool position_is_reachable_by_probe(const float &rx, const float &ry) {
+      return position_is_reachable(rx - (X_PROBE_OFFSET_FROM_EXTRUDER), ry - (Y_PROBE_OFFSET_FROM_EXTRUDER))
+             && position_is_reachable(rx, ry, FABS(MIN_PROBE_EDGE));
+    }
+  #endif
 
 #else // CARTESIAN
 
@@ -525,21 +530,25 @@ void do_blocking_move_to_xy(const float &x, const float &y, const float &fr_mm_s
         && WITHIN(ry, Y_MIN_POS - 0.001, Y_MAX_POS + 0.001);
   }
 
-  /**
-   * Return whether the given position is within the bed, and whether the nozzle
-   * can reach the position required to put the probe at the given position.
-   *
-   * Example: For a probe offset of -10,+10, then for the probe to reach 0,0 the
-   *          nozzle must be be able to reach +10,-10.
-   */
-  inline bool position_is_reachable_by_probe(const float &rx, const float &ry) {
-    const float nx = rx - (X_PROBE_OFFSET_FROM_EXTRUDER),
-                ny = ry - (Y_PROBE_OFFSET_FROM_EXTRUDER);
-    return position_is_reachable(nx, ny)
-        && WITHIN(rx, X_MIN_BED - 0.001, X_MAX_BED + 0.001)
-        && WITHIN(ry, Y_MIN_BED - 0.001, Y_MAX_BED + 0.001);
-  }
+  #if HAS_BED_PROBE
+    /**
+     * Return whether the given position is within the bed, and whether the nozzle
+     * can reach the position required to put the probe at the given position.
+     *
+     * Example: For a probe offset of -10,+10, then for the probe to reach 0,0 the
+     *          nozzle must be be able to reach +10,-10.
+     */
+    inline bool position_is_reachable_by_probe(const float &rx, const float &ry) {
+      return position_is_reachable(rx - (X_PROBE_OFFSET_FROM_EXTRUDER), ry - (Y_PROBE_OFFSET_FROM_EXTRUDER))
+          && WITHIN(rx, MIN_PROBE_X - 0.001, MAX_PROBE_X + 0.001)
+          && WITHIN(ry, MIN_PROBE_Y - 0.001, MAX_PROBE_Y + 0.001);
+    }
+  #endif
 
 #endif // CARTESIAN
+
+#if !HAS_BED_PROBE
+  FORCE_INLINE bool position_is_reachable_by_probe(const float &rx, const float &ry) { return position_is_reachable(rx, ry); }
+#endif
 
 #endif // MARLIN_H
