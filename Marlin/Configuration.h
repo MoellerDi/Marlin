@@ -570,9 +570,10 @@
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4]]]]
  */
 //#define DEFAULT_MAX_ACCELERATION      { 3000, 3000, 100, 5000 }  //default conf
+//#define DEFAULT_MAX_ACCELERATION      { 500, 500, 100, 5000 }    //stock values
 //#define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 1000, 5000 } // TDH conf
-#define DEFAULT_MAX_ACCELERATION      { 500, 500, 100, 5000 }  //stock values
-//#define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 100, 25 } // testing
+//#define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 100, 25 }    // my testing
+#define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 100, 5000 }
 
 /**
  * Default Acceleration (change/s) change = mm/s
@@ -583,7 +584,7 @@
  *   M204 T    Travel Acceleration
  */
 #define DEFAULT_ACCELERATION          500    // X, Y, Z and E acceleration for printing moves
-#define DEFAULT_RETRACT_ACCELERATION  250    // E acceleration for retracts
+#define DEFAULT_RETRACT_ACCELERATION  3000   // E acceleration for retracts
 #define DEFAULT_TRAVEL_ACCELERATION   1000   // X, Y, Z acceleration for travel (non printing) moves
 
 /**
@@ -746,8 +747,8 @@
  * Example: `M851 Z-5` with a CLEARANCE of 4  =>  9mm from bed to nozzle.
  *     But: `M851 Z+1` with a CLEARANCE of 2  =>  2mm from bed to nozzle.
  */
-#define Z_CLEARANCE_DEPLOY_PROBE    5 // Z Clearance for Deploy/Stow
-#define Z_CLEARANCE_BETWEEN_PROBES  5 // Z Clearance between probe points
+#define Z_CLEARANCE_DEPLOY_PROBE    1 // Z Clearance for Deploy/Stow
+#define Z_CLEARANCE_BETWEEN_PROBES  1 // Z Clearance between probe points
 //#define Z_AFTER_PROBING           5 // Z position after probing is done
 
 // For M851 give a range for adjusting the Z probe offset
@@ -951,7 +952,7 @@
 #if ENABLED(AUTO_BED_LEVELING_LINEAR) || ENABLED(AUTO_BED_LEVELING_BILINEAR)
 
   // Set the number of grid points per dimension.
-  #define GRID_MAX_POINTS_X 9
+  #define GRID_MAX_POINTS_X 15
   #define GRID_MAX_POINTS_Y GRID_MAX_POINTS_X
 
   // Set the boundaries for probing (where the probe can reach).
