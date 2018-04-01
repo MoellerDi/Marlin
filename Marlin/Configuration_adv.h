@@ -1069,7 +1069,7 @@
   #define Y_CS_PIN            44  // HD overwrite Y_CS_PIN
   #define E1_CS_PIN           -1  // HD overwrite E1_CS_PIN because it's needed for Y_CS_PIN
 
-  #define Z_CURRENT          400
+  #define Z_CURRENT          500
   #define Z_MICROSTEPS        16
 
   //#define X2_CURRENT         800
@@ -1081,7 +1081,7 @@
   //#define Z2_CURRENT         800
   //#define Z2_MICROSTEPS       16
 
-  #define E0_CURRENT         400
+  #define E0_CURRENT         600
   #define E0_MICROSTEPS       16
 
   //#define E1_CURRENT         800
