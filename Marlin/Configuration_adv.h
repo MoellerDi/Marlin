@@ -1060,14 +1060,14 @@
   #define HOLD_MULTIPLIER    0.5  // Scales down the holding current from run current
   #define INTERPOLATE       true  // Interpolate X/Y/Z_MICROSTEPS to 256
 
-  #define X_CURRENT          750  // rms current in mA. Multiply by 1.41 for peak current.
+  #define X_CURRENT          800  // rms current in mA. Multiply by 1.41 for peak current.
   #define X_MICROSTEPS        16  // 0..256
   #define X_CS_PIN            64  // HD overwrite X_CS_PIN
 
-  #define Y_CURRENT          750
+  #define Y_CURRENT          800
   #define Y_MICROSTEPS        16
   #define Y_CS_PIN            44  // HD overwrite Y_CS_PIN
-  #define E1_CS_PIN           -1  // HD overwrite E1_CS_PIN because it's needed as Y_CS_PIN
+  #define E1_CS_PIN           -1  // HD overwrite E1_CS_PIN because it's needed for Y_CS_PIN
 
   #define Z_CURRENT          650
   #define Z_MICROSTEPS        16
@@ -1081,7 +1081,7 @@
   //#define Z2_CURRENT         800
   //#define Z2_MICROSTEPS       16
 
-  #define E0_CURRENT         650
+  #define E0_CURRENT         800
   #define E0_MICROSTEPS       16
 
   //#define E1_CURRENT         800
@@ -1139,13 +1139,13 @@
    */
   #define HYBRID_THRESHOLD
 
-  #define X_HYBRID_THRESHOLD     100  // [mm/s]
+  #define X_HYBRID_THRESHOLD     150  // [mm/s]
   #define X2_HYBRID_THRESHOLD    100
-  #define Y_HYBRID_THRESHOLD     100
+  #define Y_HYBRID_THRESHOLD     150
   #define Y2_HYBRID_THRESHOLD    100
-  #define Z_HYBRID_THRESHOLD       3
+  #define Z_HYBRID_THRESHOLD      25
   #define Z2_HYBRID_THRESHOLD      3
-  #define E0_HYBRID_THRESHOLD     30
+  #define E0_HYBRID_THRESHOLD     50
   #define E1_HYBRID_THRESHOLD     30
   #define E2_HYBRID_THRESHOLD     30
   #define E3_HYBRID_THRESHOLD     30
