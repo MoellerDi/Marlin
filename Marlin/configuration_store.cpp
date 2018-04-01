@@ -1894,7 +1894,9 @@ void MarlinSettings::reset() {
 
   #if HAS_TRINAMIC
     void say_M906() { SERIAL_ECHOPGM("  M906 "); }
-    void say_M913() { SERIAL_ECHOPGM("  M913 "); }
+    #if ENABLED(HYBRID_THRESHOLD)
+      void say_M913() { SERIAL_ECHOPGM("  M913 "); }
+    #endif
     #if ENABLED(SENSORLESS_HOMING)
       void say_M914() { SERIAL_ECHOPGM("  M914 "); }
     #endif
