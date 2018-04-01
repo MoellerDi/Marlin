@@ -573,7 +573,7 @@
 //#define DEFAULT_MAX_ACCELERATION      { 500, 500, 100, 5000 }    //stock values
 //#define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 1000, 5000 } // TDH conf
 //#define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 100, 25 }    // my testing
-#define DEFAULT_MAX_ACCELERATION      { 500, 500, 100, 5000 }
+#define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 100, 5000 }
 
 /**
  * Default Acceleration (change/s) change = mm/s
