@@ -1343,41 +1343,43 @@ void MarlinSettings::postprocess() {
         #define TMC_SET_PWMTHRS(P,Q) tmc_set_pwmthrs(stepper##Q, TMC_##Q, tmc_hybrid_threshold[TMC_##Q], planner.axis_steps_per_mm[P##_AXIS])
         uint32_t tmc_hybrid_threshold[TMC_AXES];
         EEPROM_READ(tmc_hybrid_threshold);
-        if (!validating) {
-          #if X_IS_TRINAMIC
-            TMC_SET_PWMTHRS(X, X);
-          #endif
-          #if Y_IS_TRINAMIC
-            TMC_SET_PWMTHRS(Y, Y);
-          #endif
-          #if Z_IS_TRINAMIC
-            TMC_SET_PWMTHRS(Z, Z);
-          #endif
-          #if X2_IS_TRINAMIC
-            TMC_SET_PWMTHRS(X, X2);
-          #endif
-          #if Y2_IS_TRINAMIC
-            TMC_SET_PWMTHRS(Y, Y2);
-          #endif
-          #if Z2_IS_TRINAMIC
-            TMC_SET_PWMTHRS(Z, Z2);
-          #endif
-          #if E0_IS_TRINAMIC
-            TMC_SET_PWMTHRS(E, E0);
-          #endif
-          #if E1_IS_TRINAMIC
-            TMC_SET_PWMTHRS(E, E1);
-          #endif
-          #if E2_IS_TRINAMIC
-            TMC_SET_PWMTHRS(E, E2);
-          #endif
-          #if E3_IS_TRINAMIC
-            TMC_SET_PWMTHRS(E, E3);
-          #endif
-          #if E4_IS_TRINAMIC
-            TMC_SET_PWMTHRS(E, E4);
-          #endif
-        }
+        #if ENABLED(HYBRID_THRESHOLD)
+          if (!validating) {
+            #if X_IS_TRINAMIC
+              TMC_SET_PWMTHRS(X, X);
+            #endif
+            #if Y_IS_TRINAMIC
+              TMC_SET_PWMTHRS(Y, Y);
+            #endif
+            #if Z_IS_TRINAMIC
+              TMC_SET_PWMTHRS(Z, Z);
+            #endif
+            #if X2_IS_TRINAMIC
+              TMC_SET_PWMTHRS(X, X2);
+            #endif
+            #if Y2_IS_TRINAMIC
+              TMC_SET_PWMTHRS(Y, Y2);
+            #endif
+            #if Z2_IS_TRINAMIC
+              TMC_SET_PWMTHRS(Z, Z2);
+            #endif
+            #if E0_IS_TRINAMIC
+              TMC_SET_PWMTHRS(E, E0);
+            #endif
+            #if E1_IS_TRINAMIC
+              TMC_SET_PWMTHRS(E, E1);
+            #endif
+            #if E2_IS_TRINAMIC
+              TMC_SET_PWMTHRS(E, E2);
+            #endif
+            #if E3_IS_TRINAMIC
+              TMC_SET_PWMTHRS(E, E3);
+            #endif
+            #if E4_IS_TRINAMIC
+              TMC_SET_PWMTHRS(E, E4);
+            #endif
+          }
+        #endif
       #else
         uint32_t thrs_val;
         for (uint8_t q=TMC_AXES; q--;) EEPROM_READ(thrs_val);
