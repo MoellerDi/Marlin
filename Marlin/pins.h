@@ -161,6 +161,8 @@
   #include "pins_MINIRAMBO.h"         // ATmega2560
 #elif MB(EINSY_RAMBO)
   #include "pins_EINSY_RAMBO.h"       // ATmega2560
+#elif MB(EINSY_RETRO)
+  #include "pins_EINSY_RETRO.h"       // ATmega2560
 #elif MB(ELEFU_3)
   #include "pins_ELEFU_3.h"           // ATmega2560
 #elif MB(LEAPFROG)
@@ -173,6 +175,8 @@
   #include "pins_GT2560_REV_A.h"      // ATmega1280, ATmega2560
 #elif MB(GT2560_REV_A_PLUS)
   #include "pins_GT2560_REV_A_PLUS.h" // ATmega1280, ATmega2560
+#elif MB(RAMPS_ENDER_4)
+  #include "pins_RAMPS_ENDER_4.h"     // ATmega2560
 
 //
 // ATmega1281, ATmega2561
