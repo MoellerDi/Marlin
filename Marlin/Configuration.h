@@ -569,7 +569,7 @@
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4]]]]
  */
 //#define DEFAULT_MAX_FEEDRATE          { 500, 500, 5, 25 } //stock values
-#define DEFAULT_MAX_FEEDRATE          { 200, 200, 5, 25 } // testing
+#define DEFAULT_MAX_FEEDRATE          { 150, 150, 5, 50 } // testing
 
 /**
  * Default Max Acceleration (change/s) change = mm/s
@@ -581,7 +581,7 @@
 //#define DEFAULT_MAX_ACCELERATION      { 500, 500, 100, 5000 }    //stock values
 //#define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 1000, 5000 } // TDH conf
 //#define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 100, 25 }    // my testing
-#define DEFAULT_MAX_ACCELERATION      { 300, 300, 10, 500 }
+#define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 100, 5000 }
 
 /**
  * Default Acceleration (change/s) change = mm/s
@@ -591,9 +591,9 @@
  *   M204 R    Retract Acceleration
  *   M204 T    Travel Acceleration
  */
-#define DEFAULT_ACCELERATION          50    // X, Y, Z and E acceleration for printing moves
-#define DEFAULT_RETRACT_ACCELERATION  50    // E acceleration for retracts
-#define DEFAULT_TRAVEL_ACCELERATION   100   // X, Y, Z acceleration for travel (non printing) moves
+#define DEFAULT_ACCELERATION          600    // X, Y, Z and E acceleration for printing moves
+#define DEFAULT_RETRACT_ACCELERATION  1000   // E acceleration for retracts
+#define DEFAULT_TRAVEL_ACCELERATION   1000   // X, Y, Z acceleration for travel (non printing) moves
 
 /**
  * Default Jerk (mm/s)
@@ -960,7 +960,7 @@
 #if ENABLED(AUTO_BED_LEVELING_LINEAR) || ENABLED(AUTO_BED_LEVELING_BILINEAR)
 
   // Set the number of grid points per dimension.
-  #define GRID_MAX_POINTS_X 15
+  #define GRID_MAX_POINTS_X 11
   #define GRID_MAX_POINTS_Y GRID_MAX_POINTS_X
 
   // Set the boundaries for probing (where the probe can reach).
