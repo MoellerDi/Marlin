@@ -100,14 +100,16 @@
   #include "pins_BAM_DICE_DUE.h"      // ATmega1280, ATmega2560
 #elif MB(MKS_BASE)
   #include "pins_MKS_BASE.h"          // ATmega1280, ATmega2560
+#elif MB(MKS_BASE_15)
+  #include "pins_MKS_BASE_15.h"       // ATmega1280, ATmega2560
 #elif MB(MKS_BASE_HEROIC)
   #include "pins_MKS_BASE_HEROIC.h"   // ATmega1280, ATmega2560
-#elif MB(MKS_13)
-  #include "pins_MKS_13.h"            // ATmega1280, ATmega2560
+#elif MB(MKS_GEN_13)
+  #include "pins_MKS_GEN_13.h"        // ATmega1280, ATmega2560
 #elif MB(MKS_GEN_L)
   #include "pins_MKS_GEN_L.h"         // ATmega1280, ATmega2560
 #elif MB(ZRIB_V20)
-  #include "pins_ZRIB_V20.h"          // ATmega1280, ATmega2560 (MKS_13)
+  #include "pins_ZRIB_V20.h"          // ATmega1280, ATmega2560 (MKS_GEN_13)
 #elif MB(FELIX2)
   #include "pins_FELIX2.h"            // ATmega1280, ATmega2560
 #elif MB(RIGIDBOARD)
@@ -203,8 +205,6 @@
   #include "pins_MELZI_CREALITY.h"    // ATmega644P, ATmega1284P
 #elif MB(MELZI_MALYAN)
   #include "pins_MELZI_MALYAN.h"      // ATmega644P, ATmega1284P
-#elif MB(CREALITY_ENDER)
-  #include "pins_CREALITY_ENDER.h"    // ATmega1284P
 #elif MB(MELZI_TRONXY)
   #include "pins_MELZI_TRONXY.h"      // ATmega644P, ATmega1284P
 #elif MB(STB_11)
