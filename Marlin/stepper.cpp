@@ -360,14 +360,33 @@ void Stepper::set_directions() {
  *  4000   500  Hz - init rate
  */
 ISR(TIMER1_COMPA_vect) {
+  /**
+   * On AVR there is no hardware prioritization and preemption of
+   * interrupts, so this emulates it. The UART has first priority
+   * (otherwise, characters will be lost due to UART overflow).
+   * Then: Stepper, Endstops, Temperature, and -finally- all others.
+   *
+   * This ISR needs to run with as little preemption as possible, so
+   * the Temperature ISR is disabled here. Now only the UART, Endstops,
+   * and Arduino-defined interrupts can preempt.
+   */
+  const bool temp_isr_was_enabled = TEMPERATURE_ISR_ENABLED();
+  DISABLE_TEMPERATURE_INTERRUPT();
+  DISABLE_STEPPER_DRIVER_INTERRUPT();
+  sei();
+
   #if ENABLED(LIN_ADVANCE)
     Stepper::advance_isr_scheduler();
   #else
     Stepper::isr();
   #endif
-}
 
-#define _ENABLE_ISRs() do { cli(); if (thermalManager.in_temp_isr) CBI(TIMSK0, OCIE0B); else SBI(TIMSK0, OCIE0B); ENABLE_STEPPER_DRIVER_INTERRUPT(); } while(0)
+  // Disable global interrupts and reenable this ISR
+  cli();
+  ENABLE_STEPPER_DRIVER_INTERRUPT();
+  // Reenable the temperature ISR (if it was enabled)
+  if (temp_isr_was_enabled) ENABLE_TEMPERATURE_INTERRUPT();
+}
 
 void Stepper::isr() {
 
@@ -375,13 +394,6 @@ void Stepper::isr() {
 
   #define ENDSTOP_NOMINAL_OCR_VAL 3000 // Check endstops every 1.5ms to guarantee two stepper ISRs within 5ms for BLTouch
   #define OCR_VAL_TOLERANCE       1000 // First max delay is 2.0ms, last min delay is 0.5ms, all others 1.5ms
-
-  #if DISABLED(LIN_ADVANCE)
-    // Disable Timer0 ISRs and enable global ISR again to capture UART events (incoming chars)
-    CBI(TIMSK0, OCIE0B); // Temperature ISR
-    DISABLE_STEPPER_DRIVER_INTERRUPT();
-    sei();
-  #endif
 
   #define _SPLIT(L) (ocr_val = (uint16_t)L)
   #if ENABLED(ENDSTOP_INTERRUPTS_FEATURE)
@@ -409,7 +421,6 @@ void Stepper::isr() {
       step_remaining -= ocr_val;
       _NEXT_ISR(ocr_val);
       NOLESS(OCR1A, TCNT1 + 16);
-      _ENABLE_ISRs(); // re-enable ISRs
       return;
     }
 
@@ -433,7 +444,6 @@ void Stepper::isr() {
     }
     current_block = NULL;                       // Prep to get a new block after cleaning
     _NEXT_ISR(200);                             // Run at max speed - 10 KHz
-    _ENABLE_ISRs();
     return;
   }
 
@@ -462,14 +472,12 @@ void Stepper::isr() {
         if (current_block->steps[Z_AXIS] > 0) {
           enable_Z();
           _NEXT_ISR(2000); // Run at slow speed - 1 KHz
-          _ENABLE_ISRs(); // re-enable ISRs
           return;
         }
       #endif
     }
     else {
       _NEXT_ISR(2000); // Run at slow speed - 1 KHz
-      _ENABLE_ISRs(); // re-enable ISRs
       return;
     }
   }
@@ -773,9 +781,6 @@ void Stepper::isr() {
     current_block = NULL;
     planner.discard_current_block();
   }
-  #if DISABLED(LIN_ADVANCE)
-    _ENABLE_ISRs(); // re-enable ISRs
-  #endif
 }
 
 #if ENABLED(LIN_ADVANCE)
@@ -788,7 +793,7 @@ void Stepper::isr() {
   void Stepper::advance_isr() {
 
     #if ENABLED(MK2_MULTIPLEXER) // For SNMM even-numbered steppers are reversed
-      #define SET_E_STEP_DIR(INDEX) do{ if (e_steps) E## INDEX ##_DIR_WRITE(e_steps < 0 ? !INVERT_E## INDEX ##_DIR ^ TEST(INDEX, 0) : INVERT_E## INDEX ##_DIR ^ TEST(INDEX, 0)); }while(0)
+      #define SET_E_STEP_DIR(INDEX) do{ if (e_steps) E0_DIR_WRITE(e_steps < 0 ? !INVERT_E## INDEX ##_DIR ^ TEST(INDEX, 0) : INVERT_E## INDEX ##_DIR ^ TEST(INDEX, 0)); }while(0)
     #elif ENABLED(DUAL_X_CARRIAGE) || ENABLED(DUAL_NOZZLE_DUPLICATION_MODE)
       #define SET_E_STEP_DIR(INDEX) do{ if (e_steps) { if (e_steps < 0) REV_E_DIR(); else NORM_E_DIR(); } }while(0)
     #else
@@ -897,11 +902,6 @@ void Stepper::isr() {
   }
 
   void Stepper::advance_isr_scheduler() {
-    // Disable Timer0 ISRs and enable global ISR again to capture UART events (incoming chars)
-    CBI(TIMSK0, OCIE0B); // Temperature ISR
-    DISABLE_STEPPER_DRIVER_INTERRUPT();
-    sei();
-
     // Run main stepping ISR if flagged
     if (!nextMainISR) isr();
 
@@ -929,9 +929,6 @@ void Stepper::isr() {
 
     // Don't run the ISR faster than possible
     NOLESS(OCR1A, TCNT1 + 16);
-
-    // Restore original ISR settings
-    _ENABLE_ISRs();
   }
 
 #endif // LIN_ADVANCE
@@ -946,31 +943,6 @@ void Stepper::init() {
   // Init Microstepping Pins
   #if HAS_MICROSTEPS
     microstep_init();
-  #endif
-
-  // Init TMC Steppers
-  #if ENABLED(HAVE_TMCDRIVER)
-    tmc_init();
-  #endif
-
-  // Init TMC2130 Steppers
-  #if ENABLED(HAVE_TMC2130)
-    tmc2130_init();
-  #endif
-
-  // Init TMC2208 Steppers
-  #if ENABLED(HAVE_TMC2208)
-    tmc2208_init();
-  #endif
-
-  // TRAMS, TMC2130 and TMC2208 advanced settings
-  #if HAS_TRINAMIC
-    TMC_ADV()
-  #endif
-
-  // Init L6470 Steppers
-  #if ENABLED(HAVE_L6470DRIVER)
-    L6470_init();
   #endif
 
   // Init Dir Pins
@@ -1137,7 +1109,7 @@ void Stepper::init() {
 /**
  * Block until all buffered steps are executed / cleaned
  */
-void Stepper::synchronize() { while (planner.blocks_queued() || cleaning_buffer_counter) idle(); }
+void Stepper::synchronize() { while (planner.has_blocks_queued() || cleaning_buffer_counter) idle(); }
 
 /**
  * Set the stepper positions directly in steps
@@ -1235,10 +1207,11 @@ void Stepper::finish_and_disable() {
 }
 
 void Stepper::quick_stop() {
-  cleaning_buffer_counter = 5000;
   DISABLE_STEPPER_DRIVER_INTERRUPT();
-  while (planner.blocks_queued()) planner.discard_current_block();
+  kill_current_block();
   current_block = NULL;
+  cleaning_buffer_counter = 5000;
+  planner.clear_block_buffer();
   ENABLE_STEPPER_DRIVER_INTERRUPT();
   #if ENABLED(ULTRA_LCD)
     planner.clear_block_buffer_runtime();
@@ -1271,21 +1244,21 @@ void Stepper::report_positions() {
              zpos = count_position[Z_AXIS];
   CRITICAL_SECTION_END;
 
-  #if CORE_IS_XY || CORE_IS_XZ || IS_SCARA
+  #if CORE_IS_XY || CORE_IS_XZ || IS_DELTA || IS_SCARA
     SERIAL_PROTOCOLPGM(MSG_COUNT_A);
   #else
     SERIAL_PROTOCOLPGM(MSG_COUNT_X);
   #endif
   SERIAL_PROTOCOL(xpos);
 
-  #if CORE_IS_XY || CORE_IS_YZ || IS_SCARA
+  #if CORE_IS_XY || CORE_IS_YZ || IS_DELTA || IS_SCARA
     SERIAL_PROTOCOLPGM(" B:");
   #else
     SERIAL_PROTOCOLPGM(" Y:");
   #endif
   SERIAL_PROTOCOL(ypos);
 
-  #if CORE_IS_XZ || CORE_IS_YZ
+  #if CORE_IS_XZ || CORE_IS_YZ || IS_DELTA
     SERIAL_PROTOCOLPGM(" C:");
   #else
     SERIAL_PROTOCOLPGM(" Z:");
@@ -1325,16 +1298,16 @@ void Stepper::report_positions() {
     #endif
   #endif
 
-  #define BABYSTEP_AXIS(AXIS, INVERT) {                     \
-      const uint8_t old_dir = _READ_DIR(AXIS);              \
-      _ENABLE(AXIS);                                        \
-      _SAVE_START;                                          \
-      _APPLY_DIR(AXIS, _INVERT_DIR(AXIS)^direction^INVERT); \
-      _PULSE_WAIT;                                          \
-      _APPLY_STEP(AXIS)(!_INVERT_STEP_PIN(AXIS), true);     \
-      _PULSE_WAIT;                                          \
-      _APPLY_STEP(AXIS)(_INVERT_STEP_PIN(AXIS), true);      \
-      _APPLY_DIR(AXIS, old_dir);                            \
+  #define BABYSTEP_AXIS(AXIS, INVERT, DIR) {            \
+      const uint8_t old_dir = _READ_DIR(AXIS);          \
+      _ENABLE(AXIS);                                    \
+      _SAVE_START;                                      \
+      _APPLY_DIR(AXIS, _INVERT_DIR(AXIS)^DIR^INVERT);   \
+      _PULSE_WAIT;                                      \
+      _APPLY_STEP(AXIS)(!_INVERT_STEP_PIN(AXIS), true); \
+      _PULSE_WAIT;                                      \
+      _APPLY_STEP(AXIS)(_INVERT_STEP_PIN(AXIS), true);  \
+      _APPLY_DIR(AXIS, old_dir);                        \
     }
 
   // MUST ONLY BE CALLED BY AN ISR,
@@ -1347,20 +1320,43 @@ void Stepper::report_positions() {
       #if ENABLED(BABYSTEP_XY)
 
         case X_AXIS:
-          BABYSTEP_AXIS(X, false);
+          #if CORE_IS_XY
+            BABYSTEP_AXIS(X, false, direction);
+            BABYSTEP_AXIS(Y, false, direction);
+          #elif CORE_IS_XZ
+            BABYSTEP_AXIS(X, false, direction);
+            BABYSTEP_AXIS(Z, false, direction);
+          #else
+            BABYSTEP_AXIS(X, false, direction);
+          #endif
           break;
 
         case Y_AXIS:
-          BABYSTEP_AXIS(Y, false);
+          #if CORE_IS_XY
+            BABYSTEP_AXIS(X, false, direction);
+            BABYSTEP_AXIS(Y, false, direction^(CORESIGN(1)<0));
+          #elif CORE_IS_YZ
+            BABYSTEP_AXIS(Y, false, direction);
+            BABYSTEP_AXIS(Z, false, direction^(CORESIGN(1)<0));
+          #else
+            BABYSTEP_AXIS(Y, false, direction);
+          #endif
           break;
 
       #endif
 
       case Z_AXIS: {
 
-        #if DISABLED(DELTA)
+        #if CORE_IS_XZ
+          BABYSTEP_AXIS(X, BABYSTEP_INVERT_Z, direction);
+          BABYSTEP_AXIS(Z, BABYSTEP_INVERT_Z, direction^(CORESIGN(1)<0));
 
-          BABYSTEP_AXIS(Z, BABYSTEP_INVERT_Z);
+        #elif CORE_IS_YZ
+          BABYSTEP_AXIS(Y, BABYSTEP_INVERT_Z, direction);
+          BABYSTEP_AXIS(Z, BABYSTEP_INVERT_Z, direction^(CORESIGN(1)<0));
+
+        #elif DISABLED(DELTA)
+          BABYSTEP_AXIS(Z, BABYSTEP_INVERT_Z, direction);
 
         #else // DELTA
 

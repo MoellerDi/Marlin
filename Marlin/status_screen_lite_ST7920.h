@@ -525,12 +525,12 @@ void ST7920_Lite_Status_Screen::draw_heat_icon(const bool whichIcon, const bool 
 static struct {
   bool E1_show_target  : 1;
   bool E2_show_target  : 1;
-  #if HAS_HEATER_BED
+  #if HAS_HEATED_BED
     bool bed_show_target : 1;
   #endif
 } display_state = {
   true, true
-  #if HAS_HEATER_BED
+  #if HAS_HEATED_BED
     , true
   #endif
 };
@@ -569,7 +569,7 @@ void ST7920_Lite_Status_Screen::draw_extruder_2_temp(const int16_t temp, const i
   display_state.E2_show_target = show_target;
 }
 
-#if HAS_HEATER_BED
+#if HAS_HEATED_BED
   void ST7920_Lite_Status_Screen::draw_bed_temp(const int16_t temp, const int16_t target, bool forceUpdate) {
     const bool show_target = target && FAR(temp, target);
     draw_temps(2
@@ -622,7 +622,7 @@ void ST7920_Lite_Status_Screen::draw_status_message(const char *str) {
 
     // Trim whitespace at the end of the str, as for some reason
     // messages like "Card Inserted" are padded with many spaces
-    while (str_len > 0 && str[str_len - 1] == ' ') str_len--;
+    while (str_len && str[str_len - 1] == ' ') str_len--;
 
     if (str_len <= lcd_len) {
       // It all fits on the LCD without scrolling
@@ -680,7 +680,7 @@ bool ST7920_Lite_Status_Screen::indicators_changed() {
   #if EXTRUDERS == 2
     const int16_t  extruder_2_target = thermalManager.degTargetHotend(1);
   #endif
-  #if HAS_HEATER_BED
+  #if HAS_HEATED_BED
     const int16_t  bed_target        = thermalManager.degTargetBed();
   #endif
   static uint16_t last_checksum = 0;
@@ -688,7 +688,7 @@ bool ST7920_Lite_Status_Screen::indicators_changed() {
     #if EXTRUDERS == 2
       ^ extruder_2_target
     #endif
-    #if HAS_HEATER_BED
+    #if HAS_HEATED_BED
       ^ bed_target
     #endif
   ;
@@ -709,7 +709,7 @@ void ST7920_Lite_Status_Screen::update_indicators(const bool forceUpdate) {
       const int16_t  extruder_2_temp   = thermalManager.degHotend(1),
                      extruder_2_target = thermalManager.degTargetHotend(1);
     #endif
-    #if HAS_HEATER_BED
+    #if HAS_HEATED_BED
       const int16_t  bed_temp          = thermalManager.degBed(),
                      bed_target        = thermalManager.degTargetBed();
     #endif
@@ -718,7 +718,7 @@ void ST7920_Lite_Status_Screen::update_indicators(const bool forceUpdate) {
     #if EXTRUDERS == 2
       draw_extruder_2_temp(extruder_2_temp, extruder_2_target, forceUpdate);
     #endif
-    #if HAS_HEATER_BED
+    #if HAS_HEATED_BED
       draw_bed_temp(bed_temp, bed_target, forceUpdate);
     #endif
     draw_fan_speed(fan_speed);
@@ -727,7 +727,7 @@ void ST7920_Lite_Status_Screen::update_indicators(const bool forceUpdate) {
 
     // Update the fan and bed animations
     if (fan_speed > 0) draw_fan_icon(blink);
-    #if HAS_HEATER_BED
+    #if HAS_HEATED_BED
       if (bed_target > 0)
         draw_heat_icon(blink, true);
       else
@@ -765,8 +765,15 @@ bool ST7920_Lite_Status_Screen::blink_changed() {
   return true;
 }
 
+#ifndef STATUS_EXPIRE_SECONDS
+  #define STATUS_EXPIRE_SECONDS 20
+#endif
+
 void ST7920_Lite_Status_Screen::update_status_or_position(bool forceUpdate) {
-  static uint8_t countdown = 0;
+
+  #if STATUS_EXPIRE_SECONDS
+    static uint8_t countdown = 0;
+  #endif
 
   /**
    * There is only enough room in the display for either the
@@ -779,51 +786,60 @@ void ST7920_Lite_Status_Screen::update_status_or_position(bool forceUpdate) {
    *    countdown > 1    -- Show status
    *    countdown = 1    -- Show status, until movement
    *    countdown = 0    -- Show position
+   *
+   * If STATUS_EXPIRE_SECONDS is zero, the position display
+   * will be disabled and only the status will be shown.
    */
   if (forceUpdate || status_changed()) {
     #if ENABLED(STATUS_MESSAGE_SCROLLING)
       status_scroll_pos = 0;
     #endif
-    #ifndef STATUS_EXPIRE_SECONDS
-      #define STATUS_EXPIRE_SECONDS 20
+    #if STATUS_EXPIRE_SECONDS
+      countdown = lcd_status_message[0] ? STATUS_EXPIRE_SECONDS : 0;
     #endif
-    countdown = lcd_strlen(lcd_status_message) ? STATUS_EXPIRE_SECONDS : 0;
     draw_status_message(lcd_status_message);
     blink_changed(); // Clear changed flag
   }
-  else if (countdown > 1 && blink_changed()) {
-    countdown--;
+  #if !STATUS_EXPIRE_SECONDS
     #if ENABLED(STATUS_MESSAGE_SCROLLING)
-      draw_status_message(lcd_status_message);
+      else
+        draw_status_message(lcd_status_message);
     #endif
-  }
-  else if (countdown > 0 && blink_changed()) {
-    if (position_changed()) {
+  #else
+    else if (countdown > 1 && blink_changed()) {
       countdown--;
-      forceUpdate = true;
-    }
-    #if ENABLED(STATUS_MESSAGE_SCROLLING)
-      draw_status_message(lcd_status_message);
-    #endif
-  }
-  if (countdown == 0 && (forceUpdate || position_changed() ||
-    #if DISABLED(DISABLE_REDUCED_ACCURACY_WARNING)
-      blink_changed()
-    #endif
-  )) {
-    draw_position(
-      current_position[X_AXIS],
-      current_position[Y_AXIS],
-      current_position[Z_AXIS],
-      #if ENABLED(DISABLE_REDUCED_ACCURACY_WARNING)
-        true
-      #else
-        axis_known_position[X_AXIS] &&
-        axis_known_position[Y_AXIS] &&
-        axis_known_position[Z_AXIS]
+      #if ENABLED(STATUS_MESSAGE_SCROLLING)
+        draw_status_message(lcd_status_message);
       #endif
-    );
-  }
+    }
+    else if (countdown > 0 && blink_changed()) {
+      if (position_changed()) {
+        countdown--;
+        forceUpdate = true;
+      }
+      #if ENABLED(STATUS_MESSAGE_SCROLLING)
+        draw_status_message(lcd_status_message);
+      #endif
+    }
+    if (countdown == 0 && (forceUpdate || position_changed() ||
+      #if DISABLED(DISABLE_REDUCED_ACCURACY_WARNING)
+        blink_changed()
+      #endif
+    )) {
+      draw_position(
+        current_position[X_AXIS],
+        current_position[Y_AXIS],
+        current_position[Z_AXIS],
+        #if ENABLED(DISABLE_REDUCED_ACCURACY_WARNING)
+          true
+        #else
+          axis_known_position[X_AXIS] &&
+          axis_known_position[Y_AXIS] &&
+          axis_known_position[Z_AXIS]
+        #endif
+      );
+    }
+  #endif
 }
 
 void ST7920_Lite_Status_Screen::update_progress(const bool forceUpdate) {

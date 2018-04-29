@@ -31,6 +31,10 @@
 #include "language.h"
 #include "printcounter.h"
 
+#if ENABLED(POWER_LOSS_RECOVERY)
+  #include "power_loss_recovery.h"
+#endif
+
 #define LONGEST_FILENAME (longFilename[0] ? longFilename : filename)
 
 CardReader::CardReader() {
@@ -141,7 +145,7 @@ void CardReader::lsDive(const char *prepend, SdFile parent, const char * const m
 
         case LS_SerialPrint:
           createFilename(filename, p);
-          SERIAL_PROTOCOL(prepend);
+          if (prepend) SERIAL_PROTOCOL(prepend);
           SERIAL_PROTOCOL(filename);
           SERIAL_PROTOCOLCHAR(' ');
           SERIAL_PROTOCOLLN(p.fileSize);
@@ -164,7 +168,7 @@ void CardReader::lsDive(const char *prepend, SdFile parent, const char * const m
 void CardReader::ls() {
   lsAction = LS_SerialPrint;
   root.rewind();
-  lsDive("", root);
+  lsDive(NULL, root);
 }
 
 #if ENABLED(LONG_FILENAME_HOST_SUPPORT)
@@ -199,7 +203,7 @@ void CardReader::ls() {
 
       // Find the item, setting the long filename
       diveDir.rewind();
-      lsDive("", diveDir, segment);
+      lsDive(NULL, diveDir, segment);
 
       // Print /LongNamePart to serial output
       SERIAL_PROTOCOLCHAR('/');
@@ -229,6 +233,28 @@ void CardReader::ls() {
   }
 
 #endif // LONG_FILENAME_HOST_SUPPORT
+
+/**
+ * Echo the DOS 8.3 filename (and long filename, if any)
+ */
+void CardReader::printFilename() {
+  if (file.isOpen()) {
+    char lfilename[FILENAME_LENGTH];
+    file.getFilename(lfilename);
+    SERIAL_ECHO(lfilename);
+    #if ENABLED(LONG_FILENAME_HOST_SUPPORT)
+      getfilename(0, lfilename);
+      if (longFilename[0]) {
+        SERIAL_ECHO(' ');
+        SERIAL_ECHO(longFilename);
+      }
+    #endif
+  }
+  else
+    SERIAL_ECHOPGM("(no file)");
+
+  SERIAL_EOL();
+}
 
 void CardReader::initsd() {
   cardOK = false;
@@ -398,8 +424,7 @@ void CardReader::openFile(char* name, const bool read, const bool subcall/*=fals
         strncpy(subdirname, dirname_start, dirname_end - dirname_start);
         subdirname[dirname_end - dirname_start] = '\0';
         if (!myDir.open(curDir, subdirname, O_READ)) {
-          SERIAL_PROTOCOLPGM(MSG_SD_OPEN_FILE_FAIL);
-          SERIAL_PROTOCOL(subdirname);
+          SERIAL_PROTOCOLPAIR(MSG_SD_OPEN_FILE_FAIL, subdirname);
           SERIAL_PROTOCOLCHAR('.');
           return;
         }
@@ -428,8 +453,12 @@ void CardReader::openFile(char* name, const bool read, const bool subcall/*=fals
       SERIAL_PROTOCOLPAIR(MSG_SD_FILE_OPENED, fname);
       SERIAL_PROTOCOLLNPAIR(MSG_SD_SIZE, filesize);
       SERIAL_PROTOCOLLNPGM(MSG_SD_FILE_SELECTED);
+
       getfilename(0, fname);
       lcd_setstatus(longFilename[0] ? longFilename : fname);
+      //if (longFilename[0]) {
+      //  SERIAL_PROTOCOLPAIR(MSG_SD_FILE_LONG_NAME, longFilename);
+      //}
     }
     else {
       SERIAL_PROTOCOLPAIR(MSG_SD_OPEN_FILE_FAIL, fname);
@@ -507,7 +536,7 @@ void CardReader::removeFile(const char * const name) {
 }
 
 void CardReader::getStatus() {
-  if (cardOK) {
+  if (cardOK && sdprinting) {
     SERIAL_PROTOCOLPGM(MSG_SD_PRINTING_BYTE);
     SERIAL_PROTOCOL(sdpos);
     SERIAL_PROTOCOLCHAR('/');
@@ -603,7 +632,7 @@ void CardReader::getfilename(uint16_t nr, const char * const match/*=NULL*/) {
   lsAction = LS_GetFilename;
   nrFile_index = nr;
   curDir->rewind();
-  lsDive("", *curDir, match);
+  lsDive(NULL, *curDir, match);
 }
 
 uint16_t CardReader::getnrfilenames() {
@@ -611,7 +640,7 @@ uint16_t CardReader::getnrfilenames() {
   lsAction = LS_Count;
   nrFiles = 0;
   curDir->rewind();
-  lsDive("", *curDir);
+  lsDive(NULL, *curDir);
   //SERIAL_ECHOLN(nrFiles);
   return nrFiles;
 }
@@ -902,6 +931,15 @@ void CardReader::printingHasFinished() {
   }
   else {
     sdprinting = false;
+
+    #if ENABLED(POWER_LOSS_RECOVERY)
+      openJobRecoveryFile(false);
+      job_recovery_info.valid_head = job_recovery_info.valid_foot = 0;
+      (void)saveJobRecoveryInfo();
+      closeJobRecoveryFile();
+      job_recovery_commands_count = 0;
+    #endif
+
     #if ENABLED(SD_FINISHED_STEPPERRELEASE) && defined(SD_FINISHED_RELEASECOMMAND)
       stepper.cleaning_buffer_counter = 1; // The command will fire from the Stepper ISR
     #endif
@@ -910,6 +948,9 @@ void CardReader::printingHasFinished() {
       enqueue_and_echo_commands_P(PSTR("M31"));
     #if ENABLED(SDCARD_SORT_ALPHA)
       presort();
+    #endif
+    #if ENABLED(ULTRA_LCD) && ENABLED(LCD_SET_PROGRESS_MANUALLY)
+      progress_bar_percent = 0;
     #endif
     #if ENABLED(SD_REPRINT_LAST_SELECTED_FILE)
       lcd_reselect_last_file();
@@ -929,5 +970,47 @@ void CardReader::printingHasFinished() {
     }
   }
 #endif // AUTO_REPORT_SD_STATUS
+
+#if ENABLED(POWER_LOSS_RECOVERY)
+
+  char job_recovery_file_name[4] = "bin";
+
+  void CardReader::openJobRecoveryFile(const bool read) {
+    if (!cardOK) return;
+    if (jobRecoveryFile.isOpen()) return;
+    if (!jobRecoveryFile.open(&root, job_recovery_file_name, read ? O_READ : O_CREAT | O_WRITE | O_TRUNC | O_SYNC)) {
+      SERIAL_PROTOCOLPAIR(MSG_SD_OPEN_FILE_FAIL, job_recovery_file_name);
+      SERIAL_PROTOCOLCHAR('.');
+      SERIAL_EOL();
+    }
+    else
+      SERIAL_PROTOCOLLNPAIR(MSG_SD_WRITE_TO_FILE, job_recovery_file_name);
+  }
+
+  void CardReader::closeJobRecoveryFile() { jobRecoveryFile.close(); }
+
+  bool CardReader::jobRecoverFileExists() {
+    return jobRecoveryFile.open(&root, job_recovery_file_name, O_READ);
+  }
+
+  int16_t CardReader::saveJobRecoveryInfo() {
+    jobRecoveryFile.seekSet(0);
+    const int16_t ret = jobRecoveryFile.write(&job_recovery_info, sizeof(job_recovery_info));
+    if (ret == -1) SERIAL_PROTOCOLLNPGM("Power-loss file write failed.");
+    return ret;
+  }
+
+  int16_t CardReader::loadJobRecoveryInfo() {
+    return jobRecoveryFile.read(&job_recovery_info, sizeof(job_recovery_info));
+  }
+
+  void CardReader::removeJobRecoveryFile() {
+    if (jobRecoveryFile.remove(&root, job_recovery_file_name))
+      SERIAL_PROTOCOLLNPGM("Power-loss file deleted.");
+    else
+      SERIAL_PROTOCOLLNPGM("Power-loss file delete failed.");
+  }
+
+#endif // POWER_LOSS_RECOVERY
 
 #endif // SDSUPPORT

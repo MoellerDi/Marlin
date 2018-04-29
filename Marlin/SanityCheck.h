@@ -95,6 +95,8 @@
   #error "SERVO_ENDSTOP_ANGLES is deprecated. Use Z_SERVO_ANGLES instead."
 #elif defined(X_ENDSTOP_SERVO_NR) || defined(Y_ENDSTOP_SERVO_NR)
   #error "X_ENDSTOP_SERVO_NR and Y_ENDSTOP_SERVO_NR are deprecated and should be removed."
+#elif defined(Z_ENDSTOP_SERVO_NR)
+  #error "Z_ENDSTOP_SERVO_NR is now Z_PROBE_SERVO_NR. Please update your configuration."
 #elif defined(DEFAULT_XYJERK)
   #error "DEFAULT_XYJERK is deprecated. Use DEFAULT_XJERK and DEFAULT_YJERK instead."
 #elif defined(XY_TRAVEL_SPEED)
@@ -128,9 +130,13 @@
 #elif defined(FILAMENT_CHANGE_RETRACT_LENGTH)
   #error "FILAMENT_CHANGE_RETRACT_LENGTH is now PAUSE_PARK_RETRACT_LENGTH. Please update your configuration."
 #elif defined(FILAMENT_CHANGE_EXTRUDE_FEEDRATE)
-  #error "FILAMENT_CHANGE_EXTRUDE_FEEDRATE is now ADVANCED_PAUSE_EXTRUDE_FEEDRATE. Please update your configuration."
+  #error "FILAMENT_CHANGE_EXTRUDE_FEEDRATE is now ADVANCED_PAUSE_PURGE_FEEDRATE. Please update your configuration."
+#elif defined(ADVANCED_PAUSE_EXTRUDE_FEEDRATE)
+  #error "ADVANCED_PAUSE_EXTRUDE_FEEDRATE is now ADVANCED_PAUSE_PURGE_FEEDRATE. Please update your configuration."
 #elif defined(FILAMENT_CHANGE_EXTRUDE_LENGTH)
-  #error "FILAMENT_CHANGE_EXTRUDE_LENGTH is now ADVANCED_PAUSE_EXTRUDE_LENGTH. Please update your configuration."
+  #error "FILAMENT_CHANGE_EXTRUDE_LENGTH is now ADVANCED_PAUSE_PURGE_LENGTH. Please update your configuration."
+#elif defined(ADVANCED_PAUSE_EXTRUDE_LENGTH)
+  #error "ADVANCED_PAUSE_EXTRUDE_LENGTH is now ADVANCED_PAUSE_PURGE_LENGTH. Please update your configuration."
 #elif defined(FILAMENT_CHANGE_NOZZLE_TIMEOUT)
   #error "FILAMENT_CHANGE_NOZZLE_TIMEOUT is now PAUSE_PARK_NOZZLE_TIMEOUT. Please update your configuration."
 #elif defined(FILAMENT_CHANGE_NUMBER_OF_ALERT_BEEPS)
@@ -175,6 +181,8 @@
   #error "MANUAL_PROBE_Z_RANGE is now LCD_PROBE_Z_RANGE. Please update your configuration."
 #elif !defined(MIN_STEPS_PER_SEGMENT)
   #error Please replace "const int dropsegments" with "#define MIN_STEPS_PER_SEGMENT" (and increase by 1) in Configuration_adv.h.
+#elif MIN_STEPS_PER_SEGMENT <= 0
+  #error "MIN_STEPS_PER_SEGMENT must be at least 1. Please update your Configuration_adv.h."
 #elif defined(PREVENT_DANGEROUS_EXTRUDE)
   #error "PREVENT_DANGEROUS_EXTRUDE is now PREVENT_COLD_EXTRUSION. Please update your configuration."
 #elif defined(SCARA)
@@ -227,10 +235,16 @@
   #error "LIN_ADVANCE (1.5) no longer uses LIN_ADVANCE_E_D_RATIO. Check your configuration."
 #elif defined(NEOPIXEL_RGBW_LED)
   #error "NEOPIXEL_RGBW_LED is now NEOPIXEL_LED. Please update your configuration."
+#elif ENABLED(DELTA) && defined(DELTA_PROBEABLE_RADIUS)
+  #error "Remove DELTA_PROBEABLE_RADIUS and use MIN_PROBE_EDGE to inset the probe area instead."
 #elif defined(UBL_MESH_INSET)
   #error "UBL_MESH_INSET is now just MESH_INSET. Please update your configuration."
 #elif defined(UBL_MESH_MIN_X) || defined(UBL_MESH_MIN_Y) || defined(UBL_MESH_MAX_X)  || defined(UBL_MESH_MAX_Y)
   #error "UBL_MESH_(MIN|MAX)_[XY] is now just MESH_(MIN|MAX)_[XY]. Please update your configuration."
+#elif defined(ABL_PROBE_PT_1_X) || defined(ABL_PROBE_PT_1_Y) || defined(ABL_PROBE_PT_2_X) || defined(ABL_PROBE_PT_2_Y) || defined(ABL_PROBE_PT_3_X) || defined(ABL_PROBE_PT_3_Y)
+  #error "ABL_PROBE_PT_[123]_[XY] is now PROBE_PT_[123]_[XY]. Please update your configuration."
+#elif defined(UBL_PROBE_PT_1_X) || defined(UBL_PROBE_PT_1_Y) || defined(UBL_PROBE_PT_2_X) || defined(UBL_PROBE_PT_2_Y) || defined(UBL_PROBE_PT_3_X) || defined(UBL_PROBE_PT_3_Y)
+  #error "UBL_PROBE_PT_[123]_[XY] is now PROBE_PT_[123]_[XY]. Please update your configuration."
 #elif defined(ENABLE_MESH_EDIT_GFX_OVERLAY)
   #error "ENABLE_MESH_EDIT_GFX_OVERLAY is now MESH_EDIT_GFX_OVERLAY. Please update your configuration."
 #elif defined(BABYSTEP_ZPROBE_GFX_REVERSE)
@@ -247,8 +261,25 @@
   #error "LCD_I2C_SAINSMART_YWROBOT is now LCD_SAINSMART_I2C_(1602|2004). Please update your configuration."
 #elif defined(MEASURED_LOWER_LIMIT) || defined(MEASURED_UPPER_LIMIT)
   #error "MEASURED_(UPPER|LOWER)_LIMIT is now FILWIDTH_ERROR_MARGIN. Please update your configuration."
+#elif defined(HAVE_TMCDRIVER)
+  #error "HAVE_TMCDRIVER is now HAVE_TMC26X. Please update your Configuration_adv.h."
+#elif defined(X_IS_TMC) || defined(X2_IS_TMC) || defined(Y_IS_TMC) || defined(Y2_IS_TMC) || defined(Z_IS_TMC) || defined(Z2_IS_TMC) \
+   || defined(E0_IS_TMC) || defined(E1_IS_TMC) || defined(E2_IS_TMC) || defined(E3_IS_TMC) || defined(E4_IS_TMC)
+  #error "[AXIS]_IS_TMC is now [AXIS]_IS_TMC26X. Please update your Configuration_adv.h."
 #elif defined(AUTOMATIC_CURRENT_CONTROL)
   #error "AUTOMATIC_CURRENT_CONTROL is now MONITOR_DRIVER_STATUS. Please update your configuration."
+#elif defined(FILAMENT_CHANGE_LOAD_LENGTH)
+  #error "FILAMENT_CHANGE_LOAD_LENGTH is now FILAMENT_CHANGE_FAST_LOAD_LENGTH. Please update your configuration."
+#elif ENABLED(LEVEL_BED_CORNERS) && !defined(LEVEL_CORNERS_INSET)
+  #error "LEVEL_BED_CORNERS requires a LEVEL_CORNERS_INSET value. Please update your Configuration.h."
+#endif
+
+#define BOARD_MKS_13     -47
+#define BOARD_TRIGORILLA -343
+#if MB(MKS_13)
+  #error "BOARD_MKS_13 has been renamed BOARD_MKS_GEN_13. Please update your configuration."
+#elif MB(BOARD_TRIGORILLA)
+  #error "BOARD_TRIGORILLA has been renamed BOARD_TRIGORILLA_13. Please update your configuration."
 #endif
 
 /**
@@ -406,7 +437,7 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
   #elif ENABLED(BABYSTEP_ZPROBE_OFFSET) && !HAS_BED_PROBE
     #error "BABYSTEP_ZPROBE_OFFSET requires a probe."
   #elif ENABLED(BABYSTEP_ZPROBE_GFX_OVERLAY) && !ENABLED(DOGLCD)
-    #error "BABYSTEP_ZPROBE_GFX_OVERLAY requires a DOGLCD."
+    #error "BABYSTEP_ZPROBE_GFX_OVERLAY requires a Graphical LCD."
   #elif ENABLED(BABYSTEP_ZPROBE_GFX_OVERLAY) && !ENABLED(BABYSTEP_ZPROBE_OFFSET)
     #error "BABYSTEP_ZPROBE_GFX_OVERLAY requires a BABYSTEP_ZPROBE_OFFSET."
   #endif
@@ -451,8 +482,10 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
     #error "ADVANCED_PAUSE_FEATURE requires NOZZLE_PARK_FEATURE."
   #elif ENABLED(PREVENT_LENGTHY_EXTRUDE) && FILAMENT_CHANGE_UNLOAD_LENGTH > EXTRUDE_MAXLENGTH
     #error "FILAMENT_CHANGE_UNLOAD_LENGTH must be less than or equal to EXTRUDE_MAXLENGTH."
-  #elif ENABLED(PREVENT_LENGTHY_EXTRUDE) && FILAMENT_CHANGE_LOAD_LENGTH > EXTRUDE_MAXLENGTH
-    #error "FILAMENT_CHANGE_LOAD_LENGTH must be less than or equal to EXTRUDE_MAXLENGTH."
+  #elif ENABLED(PREVENT_LENGTHY_EXTRUDE) && FILAMENT_CHANGE_SLOW_LOAD_LENGTH > EXTRUDE_MAXLENGTH
+    #error "FILAMENT_CHANGE_SLOW_LOAD_LENGTH must be less than or equal to EXTRUDE_MAXLENGTH."
+  #elif ENABLED(PREVENT_LENGTHY_EXTRUDE) && FILAMENT_CHANGE_FAST_LOAD_LENGTH > EXTRUDE_MAXLENGTH
+    #error "FILAMENT_CHANGE_FAST_LOAD_LENGTH must be less than or equal to EXTRUDE_MAXLENGTH."
   #endif
 #endif
 
@@ -592,8 +625,8 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
 /**
  * Servo deactivation depends on servo endstops, switching nozzle, or switching extruder
  */
-#if ENABLED(DEACTIVATE_SERVOS_AFTER_MOVE) && !HAS_Z_SERVO_ENDSTOP && !defined(SWITCHING_NOZZLE_SERVO_NR) && !defined(SWITCHING_EXTRUDER_SERVO_NR)
-  #error "Z_ENDSTOP_SERVO_NR, switching nozzle, or switching extruder is required for DEACTIVATE_SERVOS_AFTER_MOVE."
+#if ENABLED(DEACTIVATE_SERVOS_AFTER_MOVE) && !HAS_Z_SERVO_PROBE && !defined(SWITCHING_NOZZLE_SERVO_NR) && !defined(SWITCHING_EXTRUDER_SERVO_NR)
+  #error "Z_PROBE_SERVO_NR, switching nozzle, or switching extruder is required for DEACTIVATE_SERVOS_AFTER_MOVE."
 #endif
 
 /**
@@ -617,36 +650,18 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
 /**
  * Allow only one kinematic type to be defined
  */
-static_assert(1 >= 0
-  #if ENABLED(DELTA)
-    + 1
-  #endif
-  #if ENABLED(MORGAN_SCARA)
-    + 1
-  #endif
-  #if ENABLED(MAKERARM_SCARA)
-    + 1
-  #endif
-  #if ENABLED(COREXY)
-    + 1
-  #endif
-  #if ENABLED(COREXZ)
-    + 1
-  #endif
-  #if ENABLED(COREYZ)
-    + 1
-  #endif
-  #if ENABLED(COREYX)
-    + 1
-  #endif
-  #if ENABLED(COREZX)
-    + 1
-  #endif
-  #if ENABLED(COREZY)
-    + 1
-  #endif
-  , "Please enable only one of DELTA, MORGAN_SCARA, MAKERARM_SCARA, COREXY, COREYX, COREXZ, COREZX, COREYZ, or COREZY."
-);
+#if 1 < 0 \
+  + ENABLED(DELTA) \
+  + ENABLED(MORGAN_SCARA) \
+  + ENABLED(MAKERARM_SCARA) \
+  + ENABLED(COREXY) \
+  + ENABLED(COREXZ) \
+  + ENABLED(COREYZ) \
+  + ENABLED(COREYX) \
+  + ENABLED(COREZX) \
+  + ENABLED(COREZY)
+  #error "Please enable only one of DELTA, MORGAN_SCARA, MAKERARM_SCARA, COREXY, COREYX, COREXZ, COREZX, COREYZ, or COREZY."
+#endif
 
 /**
  * Delta requirements
@@ -674,30 +689,16 @@ static_assert(1 >= 0
 /**
  * Allow only one probe option to be defined
  */
-static_assert(1 >= 0
-  #if ENABLED(PROBE_MANUALLY)
-    + 1
-  #endif
-  #if ENABLED(FIX_MOUNTED_PROBE)
-    + 1
-  #endif
-  #if HAS_Z_SERVO_ENDSTOP && DISABLED(BLTOUCH)
-    + 1
-  #endif
-  #if ENABLED(BLTOUCH)
-    + 1
-  #endif
-  #if ENABLED(SOLENOID_PROBE)
-    + 1
-  #endif
-  #if ENABLED(Z_PROBE_ALLEN_KEY)
-    + 1
-  #endif
-  #if ENABLED(Z_PROBE_SLED)
-    + 1
-  #endif
-  , "Please enable only one probe option: PROBE_MANUALLY, FIX_MOUNTED_PROBE, BLTOUCH, SOLENOID_PROBE, Z_PROBE_ALLEN_KEY, Z_PROBE_SLED, or Z Servo."
-);
+#if 1 < 0 \
+  + ENABLED(PROBE_MANUALLY) \
+  + ENABLED(FIX_MOUNTED_PROBE) \
+  + (HAS_Z_SERVO_PROBE && DISABLED(BLTOUCH)) \
+  + ENABLED(BLTOUCH) \
+  + ENABLED(SOLENOID_PROBE) \
+  + ENABLED(Z_PROBE_ALLEN_KEY) \
+  + ENABLED(Z_PROBE_SLED)
+  #error "Please enable only one probe option: PROBE_MANUALLY, FIX_MOUNTED_PROBE, BLTOUCH, SOLENOID_PROBE, Z_PROBE_ALLEN_KEY, Z_PROBE_SLED, or Z Servo."
+#endif
 
 #if HAS_BED_PROBE
 
@@ -722,11 +723,11 @@ static_assert(1 >= 0
   /**
    * NUM_SERVOS is required for a Z servo probe
    */
-  #if HAS_Z_SERVO_ENDSTOP
+  #if HAS_Z_SERVO_PROBE
     #ifndef NUM_SERVOS
-      #error "You must set NUM_SERVOS for a Z servo probe (Z_ENDSTOP_SERVO_NR)."
-    #elif Z_ENDSTOP_SERVO_NR >= NUM_SERVOS
-      #error "Z_ENDSTOP_SERVO_NR must be smaller than NUM_SERVOS."
+      #error "You must set NUM_SERVOS for a Z servo probe (Z_PROBE_SERVO_NR)."
+    #elif Z_PROBE_SERVO_NR >= NUM_SERVOS
+      #error "Z_PROBE_SERVO_NR must be smaller than NUM_SERVOS."
     #endif
   #endif
 
@@ -770,6 +771,10 @@ static_assert(1 >= 0
     #error "MULTIPLE_PROBING must be >= 2."
   #endif
 
+  #if Z_PROBE_LOW_POINT > 0
+    #error "Z_PROBE_LOW_POINT must be less than or equal to 0."
+  #endif
+
 #else
 
   /**
@@ -788,28 +793,27 @@ static_assert(1 >= 0
 /**
  * Allow only one bed leveling option to be defined
  */
-static_assert(1 >= 0
-  #if ENABLED(AUTO_BED_LEVELING_LINEAR)
-    + 1
-  #endif
-  #if ENABLED(AUTO_BED_LEVELING_3POINT)
-    + 1
-  #endif
-  #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
-    + 1
-  #endif
-  #if ENABLED(AUTO_BED_LEVELING_UBL)
-    + 1
-  #endif
-  #if ENABLED(MESH_BED_LEVELING)
-    + 1
-  #endif
-  , "Select only one of: MESH_BED_LEVELING, AUTO_BED_LEVELING_LINEAR, AUTO_BED_LEVELING_3POINT, AUTO_BED_LEVELING_BILINEAR or AUTO_BED_LEVELING_UBL."
-);
+#if 1 < 0 \
+  + ENABLED(AUTO_BED_LEVELING_LINEAR) \
+  + ENABLED(AUTO_BED_LEVELING_3POINT) \
+  + ENABLED(AUTO_BED_LEVELING_BILINEAR) \
+  + ENABLED(AUTO_BED_LEVELING_UBL) \
+  + ENABLED(MESH_BED_LEVELING)
+  #error "Select only one of: MESH_BED_LEVELING, AUTO_BED_LEVELING_LINEAR, AUTO_BED_LEVELING_3POINT, AUTO_BED_LEVELING_BILINEAR or AUTO_BED_LEVELING_UBL."
+#endif
 
 /**
  * Bed Leveling Requirements
  */
+
+#if ENABLED(AUTO_BED_LEVELING_UBL) || ENABLED(AUTO_BED_LEVELING_3POINT)
+  static_assert(WITHIN(PROBE_PT_1_X, MIN_PROBE_X, MAX_PROBE_X), "PROBE_PT_1_X is outside the probe region.");
+  static_assert(WITHIN(PROBE_PT_2_X, MIN_PROBE_X, MAX_PROBE_X), "PROBE_PT_2_X is outside the probe region.");
+  static_assert(WITHIN(PROBE_PT_3_X, MIN_PROBE_X, MAX_PROBE_X), "PROBE_PT_3_X is outside the probe region.");
+  static_assert(WITHIN(PROBE_PT_1_Y, MIN_PROBE_Y, MAX_PROBE_Y), "PROBE_PT_1_Y is outside the probe region.");
+  static_assert(WITHIN(PROBE_PT_2_Y, MIN_PROBE_Y, MAX_PROBE_Y), "PROBE_PT_2_Y is outside the probe region.");
+  static_assert(WITHIN(PROBE_PT_3_Y, MIN_PROBE_Y, MAX_PROBE_Y), "PROBE_PT_3_Y is outside the probe region.");
+#endif
 
 #if ENABLED(AUTO_BED_LEVELING_UBL)
 
@@ -826,15 +830,8 @@ static_assert(1 >= 0
     #error "AUTO_BED_LEVELING_UBL requires EEPROM_SETTINGS. Please update your configuration."
   #elif !WITHIN(GRID_MAX_POINTS_X, 3, 15) || !WITHIN(GRID_MAX_POINTS_Y, 3, 15)
     #error "GRID_MAX_POINTS_[XY] must be a whole number between 3 and 15."
-  #elif DISABLED(RESTORE_LEVELING_AFTER_G28)
-    #error "AUTO_BED_LEVELING_UBL (<=1.1.8) always has RESTORE_LEVELING_AFTER_G28 enabled. To keep this behavior, #define RESTORE_LEVELING_AFTER_G28. To keep it disabled comment out this line in SanityCheck.h."
-  #else
-    static_assert(WITHIN(UBL_PROBE_PT_1_X, MIN_PROBE_X, MAX_PROBE_X), "UBL_PROBE_PT_1_X can't be reached by the Z probe.");
-    static_assert(WITHIN(UBL_PROBE_PT_2_X, MIN_PROBE_X, MAX_PROBE_X), "UBL_PROBE_PT_2_X can't be reached by the Z probe.");
-    static_assert(WITHIN(UBL_PROBE_PT_3_X, MIN_PROBE_X, MAX_PROBE_X), "UBL_PROBE_PT_3_X can't be reached by the Z probe.");
-    static_assert(WITHIN(UBL_PROBE_PT_1_Y, MIN_PROBE_Y, MAX_PROBE_Y), "UBL_PROBE_PT_1_Y can't be reached by the Z probe.");
-    static_assert(WITHIN(UBL_PROBE_PT_2_Y, MIN_PROBE_Y, MAX_PROBE_Y), "UBL_PROBE_PT_2_Y can't be reached by the Z probe.");
-    static_assert(WITHIN(UBL_PROBE_PT_3_Y, MIN_PROBE_Y, MAX_PROBE_Y), "UBL_PROBE_PT_3_Y can't be reached by the Z probe.");
+  #elif !defined(RESTORE_LEVELING_AFTER_G28)
+    #error "AUTO_BED_LEVELING_UBL used to enable RESTORE_LEVELING_AFTER_G28. To keep this behavior enable RESTORE_LEVELING_AFTER_G28. Otherwise define it as 'false'."
   #endif
 
 #elif OLDSCHOOL_ABL
@@ -843,15 +840,11 @@ static_assert(1 >= 0
    * Auto Bed Leveling
    */
 
-  #if ENABLED(USE_RAW_KINEMATICS)
-    #error "USE_RAW_KINEMATICS is not compatible with AUTO_BED_LEVELING"
-  #endif
-
   /**
    * Delta and SCARA have limited bed leveling options
    */
   #if IS_SCARA && DISABLED(AUTO_BED_LEVELING_BILINEAR)
-    #error "Only AUTO_BED_LEVELING_BILINEAR currently supports SCARA bed leveling."
+    #error "SCARA machines can only use the AUTO_BED_LEVELING_BILINEAR leveling option."
   #endif
 
   /**
@@ -859,28 +852,12 @@ static_assert(1 >= 0
    */
   #if ABL_GRID
 
-    #ifdef DELTA_PROBEABLE_RADIUS
-      static_assert(LEFT_PROBE_BED_POSITION >= -DELTA_PROBEABLE_RADIUS, "LEFT_PROBE_BED_POSITION must be within DELTA_PROBEABLE_RADIUS.");
-      static_assert(RIGHT_PROBE_BED_POSITION <= DELTA_PROBEABLE_RADIUS, "RIGHT_PROBE_BED_POSITION must be within DELTA_PROBEABLE_RADIUS.");
-      static_assert(FRONT_PROBE_BED_POSITION >= -DELTA_PROBEABLE_RADIUS, "FRONT_PROBE_BED_POSITION must be within DELTA_PROBEABLE_RADIUS.");
-      static_assert(BACK_PROBE_BED_POSITION <= DELTA_PROBEABLE_RADIUS, "BACK_PROBE_BED_POSITION must be within DELTA_PROBEABLE_RADIUS.");
-    #else
-      static_assert(LEFT_PROBE_BED_POSITION < RIGHT_PROBE_BED_POSITION, "LEFT_PROBE_BED_POSITION must be less than RIGHT_PROBE_BED_POSITION.");
-      static_assert(FRONT_PROBE_BED_POSITION < BACK_PROBE_BED_POSITION, "FRONT_PROBE_BED_POSITION must be less than BACK_PROBE_BED_POSITION.");
-      static_assert(LEFT_PROBE_BED_POSITION >= MIN_PROBE_X, "LEFT_PROBE_BED_POSITION can't be reached by the Z probe.");
-      static_assert(RIGHT_PROBE_BED_POSITION <= MAX_PROBE_X, "RIGHT_PROBE_BED_POSITION can't be reached by the Z probe.");
-      static_assert(FRONT_PROBE_BED_POSITION >= MIN_PROBE_Y, "FRONT_PROBE_BED_POSITION can't be reached by the Z probe.");
-      static_assert(BACK_PROBE_BED_POSITION <= MAX_PROBE_Y, "BACK_PROBE_BED_POSITION can't be reached by the Z probe.");
-    #endif
-
-  #else // AUTO_BED_LEVELING_3POINT
-
-    static_assert(WITHIN(ABL_PROBE_PT_1_X, MIN_PROBE_X, MAX_PROBE_X), "ABL_PROBE_PT_1_X can't be reached by the Z probe.");
-    static_assert(WITHIN(ABL_PROBE_PT_2_X, MIN_PROBE_X, MAX_PROBE_X), "ABL_PROBE_PT_2_X can't be reached by the Z probe.");
-    static_assert(WITHIN(ABL_PROBE_PT_3_X, MIN_PROBE_X, MAX_PROBE_X), "ABL_PROBE_PT_3_X can't be reached by the Z probe.");
-    static_assert(WITHIN(ABL_PROBE_PT_1_Y, MIN_PROBE_Y, MAX_PROBE_Y), "ABL_PROBE_PT_1_Y can't be reached by the Z probe.");
-    static_assert(WITHIN(ABL_PROBE_PT_2_Y, MIN_PROBE_Y, MAX_PROBE_Y), "ABL_PROBE_PT_2_Y can't be reached by the Z probe.");
-    static_assert(WITHIN(ABL_PROBE_PT_3_Y, MIN_PROBE_Y, MAX_PROBE_Y), "ABL_PROBE_PT_3_Y can't be reached by the Z probe.");
+    static_assert(LEFT_PROBE_BED_POSITION < RIGHT_PROBE_BED_POSITION, "LEFT_PROBE_BED_POSITION must be less than RIGHT_PROBE_BED_POSITION.");
+    static_assert(FRONT_PROBE_BED_POSITION < BACK_PROBE_BED_POSITION, "FRONT_PROBE_BED_POSITION must be less than BACK_PROBE_BED_POSITION.");
+    static_assert(LEFT_PROBE_BED_POSITION >= MIN_PROBE_X, "LEFT_PROBE_BED_POSITION is outside the probe region.");
+    static_assert(RIGHT_PROBE_BED_POSITION <= MAX_PROBE_X, "RIGHT_PROBE_BED_POSITION is outside the probe region.");
+    static_assert(FRONT_PROBE_BED_POSITION >= MIN_PROBE_Y, "FRONT_PROBE_BED_POSITION is outside the probe region.");
+    static_assert(BACK_PROBE_BED_POSITION <= MAX_PROBE_Y, "BACK_PROBE_BED_POSITION is outside the probe region.");
 
   #endif // AUTO_BED_LEVELING_3POINT
 
@@ -901,7 +878,9 @@ static_assert(1 >= 0
 
 #endif
 
-#if !HAS_MESH && ENABLED(G26_MESH_VALIDATION)
+#if HAS_MESH
+  static_assert(DEFAULT_ZJERK > 0.1, "Low DEFAULT_ZJERK values are incompatible with mesh-based leveling.");
+#elif ENABLED(G26_MESH_VALIDATION)
   #error "G26_MESH_VALIDATION requires MESH_BED_LEVELING, AUTO_BED_LEVELING_BILINEAR, or AUTO_BED_LEVELING_UBL."
 #endif
 
@@ -940,15 +919,15 @@ static_assert(1 >= 0
  */
 #if ENABLED(Z_SAFE_HOMING)
   #if HAS_BED_PROBE
-    #if !WITHIN(Z_SAFE_HOMING_X_POINT, MIN_PROBE_X, MAX_PROBE_X)
-      #error "Z_SAFE_HOMING_X_POINT can't be reached by the Z probe."
-    #elif !WITHIN(Z_SAFE_HOMING_Y_POINT, MIN_PROBE_Y, MAX_PROBE_Y)
-      #error "Z_SAFE_HOMING_Y_POINT can't be reached by the Z probe."
-    #endif
-  #elif !WITHIN(Z_SAFE_HOMING_X_POINT, X_MIN_POS, X_MAX_POS)
-    #error "Z_SAFE_HOMING_X_POINT can't be reached by the nozzle."
-  #elif !WITHIN(Z_SAFE_HOMING_Y_POINT, Y_MIN_POS, Y_MAX_POS)
-    #error "Z_SAFE_HOMING_Y_POINT can't be reached by the nozzle."
+    static_assert(WITHIN(Z_SAFE_HOMING_X_POINT, MIN_PROBE_X, MAX_PROBE_X),
+      "Z_SAFE_HOMING_X_POINT is outside the probe region.");
+    static_assert(WITHIN(Z_SAFE_HOMING_Y_POINT, MIN_PROBE_Y, MAX_PROBE_Y),
+      "Z_SAFE_HOMING_Y_POINT is outside the probe region.");
+  #else
+    static_assert(WITHIN(Z_SAFE_HOMING_X_POINT, X_MIN_POS, X_MAX_POS),
+      "Z_SAFE_HOMING_X_POINT can't be reached by the nozzle.");
+    static_assert(WITHIN(Z_SAFE_HOMING_Y_POINT, Y_MIN_POS, Y_MAX_POS),
+      "Z_SAFE_HOMING_Y_POINT can't be reached by the nozzle.");
   #endif
 #endif // Z_SAFE_HOMING
 
@@ -1355,143 +1334,77 @@ static_assert(1 >= 0
  *       SAV_3DGLCD => U8GLIB_SH1106 => ULTIMAKERCONTROLLER
  *       MKS_12864OLED => U8GLIB_SH1106 => ULTIMAKERCONTROLLER
  *       MKS_12864OLED_SSD1306 => U8GLIB_SSD1306 => ULTIMAKERCONTROLLER
+ *       MKS_MINI_12864 => MINIPANEL
  *       miniVIKI => ULTIMAKERCONTROLLER
  *       VIKI2 => ULTIMAKERCONTROLLER
  *       ELB_FULL_GRAPHIC_CONTROLLER => ULTIMAKERCONTROLLER
  *       PANEL_ONE => ULTIMAKERCONTROLLER
  */
-static_assert(1 >= 0
-  #if ENABLED(ULTIMAKERCONTROLLER) \
+#if 1 < 0 \
+  + (     ENABLED(ULTIMAKERCONTROLLER) \
       && DISABLED(SAV_3DGLCD) \
       && DISABLED(miniVIKI) \
       && DISABLED(VIKI2) \
       && DISABLED(ELB_FULL_GRAPHIC_CONTROLLER) \
       && DISABLED(PANEL_ONE) \
       && DISABLED(MKS_12864OLED) \
-      && DISABLED(MKS_12864OLED_SSD1306)
-    + 1
-  #endif
-  #if ENABLED(REPRAP_DISCOUNT_SMART_CONTROLLER) \
+      && DISABLED(MKS_12864OLED_SSD1306) ) \
+  + (     ENABLED(REPRAP_DISCOUNT_SMART_CONTROLLER) \
       && DISABLED(REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER) \
       && DISABLED(LCD_FOR_MELZI) \
       && DISABLED(MAKEBOARD_MINI_2_LINE_DISPLAY_1602) \
       && DISABLED(MKS_12864OLED) \
-      && DISABLED(MKS_12864OLED_SSD1306)
-    + 1
-  #endif
-  #if ENABLED(REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER) \
-      && DISABLED(BQ_LCD_SMART_CONTROLLER)
-    + 1
-  #endif
-  #if ENABLED(LCD_FOR_MELZI)
-    + 1
-  #endif
-  #if ENABLED(MKS_12864OLED)
-    + 1
-  #endif
-  #if ENABLED(MKS_12864OLED_SSD1306)
-    + 1
-  #endif
-  #if ENABLED(MAKEBOARD_MINI_2_LINE_DISPLAY_1602)
-    + 1
-  #endif
-  #if ENABLED(CARTESIO_UI)
-    + 1
-  #endif
-  #if ENABLED(PANEL_ONE)
-    + 1
-  #endif
-  #if ENABLED(MAKRPANEL)
-    + 1
-  #endif
-  #if ENABLED(REPRAPWORLD_GRAPHICAL_LCD)
-    + 1
-  #endif
-  #if ENABLED(VIKI2)
-    + 1
-  #endif
-  #if ENABLED(miniVIKI)
-    + 1
-  #endif
-  #if ENABLED(ELB_FULL_GRAPHIC_CONTROLLER)
-    + 1
-  #endif
-  #if ENABLED(G3D_PANEL)
-    + 1
-  #endif
-  #if ENABLED(MINIPANEL) && DISABLED(MKS_MINI_12864)
-    + 1
-  #endif
-  #if ENABLED(MKS_MINI_12864)
-    + 1
-  #endif
-  #if ENABLED(REPRAPWORLD_KEYPAD) \
-      && DISABLED(CARTESIO_UI) \
-      && DISABLED(ZONESTAR_LCD)
-    + 1
-  #endif
-  #if ENABLED(RIGIDBOT_PANEL)
-    + 1
-  #endif
-  #if ENABLED(RA_CONTROL_PANEL)
-    + 1
-  #endif
-  #if ENABLED(LCD_SAINSMART_I2C_1602)
-    + 1
-  #endif
-  #if ENABLED(LCD_SAINSMART_I2C_2004)
-    + 1
-  #endif
-  #if ENABLED(LCM1602)
-    + 1
-  #endif
-  #if ENABLED(LCD_I2C_PANELOLU2)
-    + 1
-  #endif
-  #if ENABLED(LCD_I2C_VIKI)
-    + 1
-  #endif
-  #if ENABLED(U8GLIB_SSD1306) && DISABLED(OLED_PANEL_TINYBOY2) && DISABLED(MKS_12864OLED_SSD1306)
-    + 1
-  #endif
-  #if ENABLED(SAV_3DLCD)
-    + 1
-  #endif
-  #if ENABLED(BQ_LCD_SMART_CONTROLLER)
-    + 1
-  #endif
-  #if ENABLED(SAV_3DGLCD)
-    + 1
-  #endif
-  #if ENABLED(OLED_PANEL_TINYBOY2)
-    + 1
-  #endif
-  #if ENABLED(ZONESTAR_LCD)
-    + 1
-  #endif
-  #if ENABLED(ULTI_CONTROLLER)
-    + 1
-  #endif
-  , "Please select no more than one LCD controller option."
-);
+      && DISABLED(MKS_12864OLED_SSD1306) ) \
+  + (ENABLED(REPRAP_DISCOUNT_FULL_GRAPHIC_SMART_CONTROLLER) && DISABLED(BQ_LCD_SMART_CONTROLLER)) \
+  + ENABLED(LCD_FOR_MELZI) \
+  + ENABLED(MKS_12864OLED) \
+  + ENABLED(MKS_12864OLED_SSD1306) \
+  + ENABLED(MAKEBOARD_MINI_2_LINE_DISPLAY_1602) \
+  + ENABLED(CARTESIO_UI) \
+  + ENABLED(PANEL_ONE) \
+  + ENABLED(MAKRPANEL) \
+  + ENABLED(REPRAPWORLD_GRAPHICAL_LCD) \
+  + ENABLED(VIKI2) \
+  + ENABLED(miniVIKI) \
+  + ENABLED(ELB_FULL_GRAPHIC_CONTROLLER) \
+  + ENABLED(G3D_PANEL) \
+  + (ENABLED(MINIPANEL) && DISABLED(MKS_MINI_12864)) \
+  + ENABLED(MKS_MINI_12864) \
+  + (ENABLED(REPRAPWORLD_KEYPAD) && DISABLED(CARTESIO_UI) && DISABLED(ZONESTAR_LCD)) \
+  + ENABLED(RIGIDBOT_PANEL) \
+  + ENABLED(RA_CONTROL_PANEL) \
+  + ENABLED(LCD_SAINSMART_I2C_1602) \
+  + ENABLED(LCD_SAINSMART_I2C_2004) \
+  + ENABLED(LCM1602) \
+  + ENABLED(LCD_I2C_PANELOLU2) \
+  + ENABLED(LCD_I2C_VIKI) \
+  + (ENABLED(U8GLIB_SSD1306) && DISABLED(OLED_PANEL_TINYBOY2) && DISABLED(MKS_12864OLED_SSD1306)) \
+  + ENABLED(SAV_3DLCD) \
+  + ENABLED(BQ_LCD_SMART_CONTROLLER) \
+  + ENABLED(SAV_3DGLCD) \
+  + ENABLED(OLED_PANEL_TINYBOY2) \
+  + ENABLED(ZONESTAR_LCD) \
+  + ENABLED(ULTI_CONTROLLER)
+  #error "Please select no more than one LCD controller option."
+#endif
 
 /**
- * Make sure HAVE_TMCDRIVER is warranted
+ * Make sure HAVE_TMC26X is warranted
  */
-#if ENABLED(HAVE_TMCDRIVER) && !( \
-         ENABLED(  X_IS_TMC ) \
-      || ENABLED( X2_IS_TMC ) \
-      || ENABLED(  Y_IS_TMC ) \
-      || ENABLED( Y2_IS_TMC ) \
-      || ENABLED(  Z_IS_TMC ) \
-      || ENABLED( Z2_IS_TMC ) \
-      || ENABLED( E0_IS_TMC ) \
-      || ENABLED( E1_IS_TMC ) \
-      || ENABLED( E2_IS_TMC ) \
-      || ENABLED( E3_IS_TMC ) \
-      || ENABLED( E4_IS_TMC ) \
+#if ENABLED(HAVE_TMC26X) && !( \
+         ENABLED(  X_IS_TMC26X ) \
+      || ENABLED( X2_IS_TMC26X ) \
+      || ENABLED(  Y_IS_TMC26X ) \
+      || ENABLED( Y2_IS_TMC26X ) \
+      || ENABLED(  Z_IS_TMC26X ) \
+      || ENABLED( Z2_IS_TMC26X ) \
+      || ENABLED( E0_IS_TMC26X ) \
+      || ENABLED( E1_IS_TMC26X ) \
+      || ENABLED( E2_IS_TMC26X ) \
+      || ENABLED( E3_IS_TMC26X ) \
+      || ENABLED( E4_IS_TMC26X ) \
   )
-  #error "HAVE_TMCDRIVER requires at least one TMC stepper to be set."
+  #error "HAVE_TMC26X requires at least one TMC26X stepper to be set."
 #endif
 
 /**
@@ -1538,12 +1451,26 @@ static_assert(1 >= 0
     #error "E4_CS_PIN is required for E4_IS_TMC2130. Define E4_CS_PIN in Configuration_adv.h."
   #endif
 
-  // Require STEALTHCHOP for SENSORLESS_HOMING on DELTA as the transition from spreadCycle to stealthChop
-  // is necessary in order to reset the stallGuard indication between the initial movement of all three
-  // towers to +Z and the individual homing of each tower. This restriction can be removed once a means of
-  // clearing the stallGuard activated status is found.
-  #if ENABLED(SENSORLESS_HOMING) && ENABLED(DELTA) && !ENABLED(STEALTHCHOP)
-    #error "SENSORLESS_HOMING on DELTA currently requires STEALTHCHOP."
+  #if ENABLED(SENSORLESS_HOMING)
+    // Require STEALTHCHOP for SENSORLESS_HOMING on DELTA as the transition from spreadCycle to stealthChop
+    // is necessary in order to reset the stallGuard indication between the initial movement of all three
+    // towers to +Z and the individual homing of each tower. This restriction can be removed once a means of
+    // clearing the stallGuard activated status is found.
+    #if ENABLED(DELTA) && !ENABLED(STEALTHCHOP)
+      #error "SENSORLESS_HOMING on DELTA currently requires STEALTHCHOP."
+    #elif X_SENSORLESS && X_HOME_DIR == -1 && (DISABLED(X_MIN_ENDSTOP_INVERTING) || DISABLED(ENDSTOPPULLUP_XMIN))
+      #error "SENSORLESS_HOMING requires X_MIN_ENDSTOP_INVERTING and ENDSTOPPULLUP_XMIN when homing to X_MIN."
+    #elif X_SENSORLESS && X_HOME_DIR ==  1 && (DISABLED(X_MAX_ENDSTOP_INVERTING) || DISABLED(ENDSTOPPULLUP_XMAX))
+      #error "SENSORLESS_HOMING requires X_MAX_ENDSTOP_INVERTING and ENDSTOPPULLUP_XMAX when homing to X_MAX."
+    #elif Y_SENSORLESS && Y_HOME_DIR == -1 && (DISABLED(Y_MIN_ENDSTOP_INVERTING) || DISABLED(ENDSTOPPULLUP_YMIN))
+      #error "SENSORLESS_HOMING requires Y_MIN_ENDSTOP_INVERTING and ENDSTOPPULLUP_YMIN when homing to Y_MIN."
+    #elif Y_SENSORLESS && Y_HOME_DIR ==  1 && (DISABLED(Y_MAX_ENDSTOP_INVERTING) || DISABLED(ENDSTOPPULLUP_YMAX))
+      #error "SENSORLESS_HOMING requires Y_MAX_ENDSTOP_INVERTING and ENDSTOPPULLUP_YMAX when homing to Y_MAX."
+    #elif Z_SENSORLESS && Z_HOME_DIR == -1 && (DISABLED(Z_MIN_ENDSTOP_INVERTING) || DISABLED(ENDSTOPPULLUP_ZMIN))
+      #error "SENSORLESS_HOMING requires Z_MIN_ENDSTOP_INVERTING and ENDSTOPPULLUP_ZMIN when homing to Z_MIN."
+    #elif Z_SENSORLESS && Z_HOME_DIR ==  1 && (DISABLED(Z_MAX_ENDSTOP_INVERTING) || DISABLED(ENDSTOPPULLUP_ZMAX))
+      #error "SENSORLESS_HOMING requires Z_MAX_ENDSTOP_INVERTING and ENDSTOPPULLUP_ZMAX when homing to Z_MAX."
+    #endif
   #endif
 
   // Sensorless homing is required for both combined steppers in an H-bot
@@ -1621,6 +1548,87 @@ static_assert(1 >= 0
       || ENABLED( E4_IS_L6470 ) \
   )
   #error "HAVE_L6470DRIVER requires at least one L6470 stepper to be set."
+#endif
+
+/**
+ * Check that each axis has only one driver selected
+ */
+#if 1 < 0 \
+  + ENABLED(X_IS_TMC26X) \
+  + ENABLED(X_IS_TMC2130) \
+  + ENABLED(X_IS_TMC2208) \
+  + ENABLED(X_IS_L6470)
+  #error "Please enable only one stepper driver for the X axis."
+#endif
+#if 1 < 0 \
+  + ENABLED(X2_IS_TMC26X) \
+  + ENABLED(X2_IS_TMC2130) \
+  + ENABLED(X2_IS_TMC2208) \
+  + ENABLED(X2_IS_L6470)
+  #error "Please enable only one stepper driver for the X2 axis."
+#endif
+#if 1 < 0 \
+  + ENABLED(Y_IS_TMC26X) \
+  + ENABLED(Y_IS_TMC2130) \
+  + ENABLED(Y_IS_TMC2208) \
+  + ENABLED(Y_IS_L6470)
+  #error "Please enable only one stepper driver for the Y axis."
+#endif
+#if 1 < 0 \
+  + ENABLED(Y2_IS_TMC26X) \
+  + ENABLED(Y2_IS_TMC2130) \
+  + ENABLED(Y2_IS_TMC2208) \
+  + ENABLED(Y2_IS_L6470)
+  #error "Please enable only one stepper driver for the Y2 axis."
+#endif
+#if 1 < 0 \
+  + ENABLED(Z_IS_TMC26X) \
+  + ENABLED(Z_IS_TMC2130) \
+  + ENABLED(Z_IS_TMC2208) \
+  + ENABLED(Z_IS_L6470)
+  #error "Please enable only one stepper driver for the Z axis."
+#endif
+#if 1 < 0 \
+  + ENABLED(Z2_IS_TMC26X) \
+  + ENABLED(Z2_IS_TMC2130) \
+  + ENABLED(Z2_IS_TMC2208) \
+  + ENABLED(Z2_IS_L6470)
+  #error "Please enable only one stepper driver for the Z2 axis."
+#endif
+#if 1 < 0 \
+  + ENABLED(E0_IS_TMC26X) \
+  + ENABLED(E0_IS_TMC2130) \
+  + ENABLED(E0_IS_TMC2208) \
+  + ENABLED(E0_IS_L6470)
+  #error "Please enable only one stepper driver for the E0 axis."
+#endif
+#if 1 < 0 \
+  + ENABLED(E1_IS_TMC26X) \
+  + ENABLED(E1_IS_TMC2130) \
+  + ENABLED(E1_IS_TMC2208) \
+  + ENABLED(E1_IS_L6470)
+  #error "Please enable only one stepper driver for the E1 axis."
+#endif
+#if 1 < 0 \
+  + ENABLED(E2_IS_TMC26X) \
+  + ENABLED(E2_IS_TMC2130) \
+  + ENABLED(E2_IS_TMC2208) \
+  + ENABLED(E2_IS_L6470)
+  #error "Please enable only one stepper driver for the E2 axis."
+#endif
+#if 1 < 0 \
+  + ENABLED(E3_IS_TMC26X) \
+  + ENABLED(E3_IS_TMC2130) \
+  + ENABLED(E3_IS_TMC2208) \
+  + ENABLED(E3_IS_L6470)
+  #error "Please enable only one stepper driver for the E3 axis."
+#endif
+#if 1 < 0 \
+  + ENABLED(E4_IS_TMC26X) \
+  + ENABLED(E4_IS_TMC2130) \
+  + ENABLED(E4_IS_TMC2208) \
+  + ENABLED(E4_IS_L6470)
+  #error "Please enable only one stepper driver for the E4 axis."
 #endif
 
 /**
@@ -1735,6 +1743,10 @@ static_assert(COUNT(sanity_arr_3) <= XYZE_N, "DEFAULT_MAX_ACCELERATION has too m
       #error "SKEW_CORRECTION requires YZ_SKEW_FACTOR or YZ_DIAG_AC, YZ_DIAG_BD, YZ_SIDE_AD."
     #endif
   #endif
+#endif
+
+#if ENABLED(POWER_LOSS_RECOVERY) && !ENABLED(ULTIPANEL)
+  #error "POWER_LOSS_RECOVERY currently requires an LCD Controller."
 #endif
 
 #endif // _SANITYCHECK_H_

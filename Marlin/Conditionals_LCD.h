@@ -376,9 +376,10 @@
 
   #define HAS_DEBUG_MENU ENABLED(LCD_PROGRESS_BAR_TEST)
 
-  // MK2 Multiplexer forces SINGLENOZZLE to be enabled
+  // MK2 Multiplexer forces SINGLENOZZLE and kills DISABLE_INACTIVE_EXTRUDER
   #if ENABLED(MK2_MULTIPLEXER)
     #define SINGLENOZZLE
+    #undef DISABLE_INACTIVE_EXTRUDER
   #endif
 
   /**
@@ -413,7 +414,7 @@
     #else
       #define E_STEPPERS    1
     #endif
-    #define E_MANUAL        E_STEPPERS
+    #define E_MANUAL        EXTRUDERS
   #elif ENABLED(MIXING_EXTRUDER)
     #define E_STEPPERS      MIXING_STEPPERS
     #define E_MANUAL        1
@@ -439,11 +440,11 @@
    * and uses "special" angles for its state.
    */
   #if ENABLED(BLTOUCH)
-    #ifndef Z_ENDSTOP_SERVO_NR
-      #define Z_ENDSTOP_SERVO_NR 0
+    #ifndef Z_PROBE_SERVO_NR
+      #define Z_PROBE_SERVO_NR 0
     #endif
     #ifndef NUM_SERVOS
-      #define NUM_SERVOS (Z_ENDSTOP_SERVO_NR + 1)
+      #define NUM_SERVOS (Z_PROBE_SERVO_NR + 1)
     #endif
     #undef DEACTIVATE_SERVOS_AFTER_MOVE
     #if NUM_SERVOS == 1
@@ -478,20 +479,24 @@
   /**
    * Set a flag for a servo probe
    */
-  #define HAS_Z_SERVO_ENDSTOP (defined(Z_ENDSTOP_SERVO_NR) && Z_ENDSTOP_SERVO_NR >= 0)
+  #define HAS_Z_SERVO_PROBE (defined(Z_PROBE_SERVO_NR) && Z_PROBE_SERVO_NR >= 0)
 
   /**
-   * Set a flag for any enabled probe
+   * Set flags for enabled probes
    */
-  #define PROBE_SELECTED (ENABLED(PROBE_MANUALLY) || ENABLED(FIX_MOUNTED_PROBE) || ENABLED(Z_PROBE_ALLEN_KEY) || HAS_Z_SERVO_ENDSTOP || ENABLED(Z_PROBE_SLED) || ENABLED(SOLENOID_PROBE))
+  #define HAS_BED_PROBE (ENABLED(FIX_MOUNTED_PROBE) || ENABLED(Z_PROBE_ALLEN_KEY) || HAS_Z_SERVO_PROBE || ENABLED(Z_PROBE_SLED) || ENABLED(SOLENOID_PROBE))
+  #define PROBE_SELECTED (HAS_BED_PROBE || ENABLED(PROBE_MANUALLY))
 
-  /**
-   * Clear probe pin settings when no probe is selected
-   */
-  #if !PROBE_SELECTED || ENABLED(PROBE_MANUALLY)
+  #if !HAS_BED_PROBE
+    // Clear probe pin settings when no probe is selected
     #undef Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
     #undef Z_MIN_PROBE_ENDSTOP
+  #elif ENABLED(Z_PROBE_ALLEN_KEY)
+    // Extra test for Allen Key Probe
+    #define PROBE_IS_TRIGGERED_WHEN_STOWED_TEST
   #endif
+
+  #define HOMING_Z_WITH_PROBE (HAS_BED_PROBE && Z_HOME_DIR < 0 && ENABLED(Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN))
 
   #define HAS_SOFTWARE_ENDSTOPS (ENABLED(MIN_SOFTWARE_ENDSTOPS) || ENABLED(MAX_SOFTWARE_ENDSTOPS))
   #define HAS_RESUME_CONTINUE (ENABLED(NEWPANEL) || ENABLED(EMERGENCY_PARSER))
