@@ -28,7 +28,7 @@ curl -s -H "Content-Type: application/json" -H "X-Api-Key: $YOUR_API_KEY" -X POS
 sleep 2
 
 # build and upload firmware to CR-10
-pio run -e cr10 -t upload
+pio run -e melzi_optiboot -t upload
 
 # re-connect octoprint
 sleep 5
