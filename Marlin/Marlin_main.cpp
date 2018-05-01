@@ -1200,7 +1200,6 @@ inline void get_serial_commands() {
                 leds.set_off();
               #endif
             #endif // PRINTER_EVENT_LEDS
-            card.checkautostart(true);
           }
         }
         else if (n == -1) {
@@ -2215,7 +2214,7 @@ void clean_up_after_endstop_or_probe_move() {
    * @param  fr_mm_s  Feedrate in mm/s
    * @return true to indicate an error
    */
-  static bool do_probe_move(const float z, const float fr_mm_m) {
+  static bool do_probe_move(const float z, const float fr_mm_s) {
     #if ENABLED(DEBUG_LEVELING_FEATURE)
       if (DEBUGGING(LEVELING)) DEBUG_POS(">>> do_probe_move", current_position);
     #endif
@@ -2240,7 +2239,7 @@ void clean_up_after_endstop_or_probe_move() {
     #endif
 
     // Move down until probe triggered
-    do_blocking_move_to_z(z, MMM_TO_MMS(fr_mm_m));
+    do_blocking_move_to_z(z, fr_mm_s);
 
     // Check to see if the probe was triggered
     const bool probe_triggered = TEST(Endstops::endstop_hit_bits,
@@ -2939,8 +2938,8 @@ static void do_homing_move(const AxisEnum axis, const float distance, const floa
       SERIAL_ECHOPAIR(">>> do_homing_move(", axis_codes[axis]);
       SERIAL_ECHOPAIR(", ", distance);
       SERIAL_ECHOPAIR(", ", fr_mm_s);
-      SERIAL_CHAR(')');
-      SERIAL_EOL();
+      SERIAL_ECHOPAIR(" [", fr_mm_s ? fr_mm_s : homing_feedrate(axis));
+      SERIAL_ECHOLNPGM("])");
     }
   #endif
 
@@ -3103,7 +3102,7 @@ static void homeaxis(const AxisEnum axis) {
     #endif
     do_homing_move(axis, -bump
       #if HOMING_Z_WITH_PROBE
-        , MMM_TO_MMS(Z_PROBE_SPEED_FAST)
+        , axis == Z_AXIS ? MMM_TO_MMS(Z_PROBE_SPEED_FAST) : 0.00
       #endif
     );
 
@@ -14413,7 +14412,7 @@ void loop() {
 
   #if ENABLED(SDSUPPORT)
 
-    card.checkautostart(false);
+    card.checkautostart();
 
     #if ENABLED(ULTIPANEL)
       if (abort_sd_printing) {
