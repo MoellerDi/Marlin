@@ -1231,8 +1231,10 @@
    * }
    */
   #define TMC_ADV() {  \
+    /*
     stepperZ.stealthChop(false);  \
     stepperE0.stealthChop(false); \
+    */
   }
 
 #endif // TMC2130 || TMC2208
