@@ -1228,14 +1228,12 @@
    * #define TMC_ADV() { \
    *   stepperX.diag0_temp_prewarn(1); \
    *   stepperY.interpolate(0); \
+   *   stepperZ.stealthChop(false);  \
+   *   stepperE0.stealthChop(false); \
    * }
    */
-  #define TMC_ADV() {  \
-    /*
-    stepperZ.stealthChop(false);  \
-    stepperE0.stealthChop(false); \
-    */
-  }
+  #define TMC_ADV() {  }
+  
 
 #endif // TMC2130 || TMC2208
 
