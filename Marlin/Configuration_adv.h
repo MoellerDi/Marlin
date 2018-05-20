@@ -1242,10 +1242,7 @@
    *   stepperE0.stealthChop(false); \
    * }
    */
-  #define TMC_ADV() { \
-    stepperE0.interpolate(false); \
-    stepperE0.stealthChop(false); \
-  }
+  #define TMC_ADV() {  }
   
 
 #endif // TMC2130 || TMC2208
