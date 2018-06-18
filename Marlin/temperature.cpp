@@ -1209,9 +1209,7 @@ void Temperature::init() {
     HAL_ANALOG_SELECT(FILWIDTH_PIN);
   #endif
 
-  // Use timer0 for temperature measurement
-  // Interleave temperature interrupt with millies interrupt
-  OCR0B = 128;
+  HAL_timer_start(TEMP_TIMER_NUM, TEMP_TIMER_FREQUENCY);
   ENABLE_TEMPERATURE_INTERRUPT();
 
   #if HAS_AUTO_FAN_0
@@ -2130,7 +2128,7 @@ void Temperature::isr() {
         HAL_START_ADC(TEMP_CHAMBER_PIN);
         break;
       case MeasureTemp_CHAMBER:
-        raw_temp_chamber_value += ADC;
+        raw_temp_chamber_value += HAL_READ_ADC;
         break;
     #endif
 
@@ -2188,7 +2186,7 @@ void Temperature::isr() {
         break;
       case Measure_ADC_KEY:
         if (ADCKey_count < 16) {
-          raw_ADCKey_value = ADC;
+          raw_ADCKey_value = HAL_READ_ADC;
           if (raw_ADCKey_value > 900) {
             //ADC Key release
             ADCKey_count = 0;
