@@ -4701,6 +4701,10 @@ void home_all_axes() { gcode_G28(true); }
      */
     if (!g29_in_progress) {
 
+      #if ENABLED(DUAL_X_CARRIAGE)
+        if (active_extruder != 0) tool_change(0);
+      #endif
+
       #if ENABLED(PROBE_MANUALLY) || ENABLED(AUTO_BED_LEVELING_LINEAR)
         abl_probe_index = -1;
       #endif
@@ -10878,7 +10882,7 @@ inline void gcode_M502() {
    */
   inline void gcode_M7219() {
     if (parser.seen('I'))
-      for (uint8_t r = 0; r < 8; r++) Max7219_Set_Row(r, 0);
+      Max7219_init();
     else if (parser.seenval('R')) {
       const uint8_t r = parser.value_int();
       Max7219_Set_Row(r, parser.byteval('V'));
@@ -12627,8 +12631,6 @@ void process_next_command() {
       M100_dump_routine("   Command Queue:", (const char*)command_queue, (const char*)(command_queue + sizeof(command_queue)));
     #endif
   }
-
-  reset_stepper_timeout(); // Keep steppers powered
 
   // Parse the next command in the queue
   parser.parse(current_command);
