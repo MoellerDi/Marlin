@@ -7,7 +7,7 @@ YOUR_API_KEY= <add your own api key here>
 REPOSRC=https://github.com/MoellerDi/Marlin.git
 BRANCH=bugfix-2.0.x-HD-MKSGen14
 
-LOCALREPO=/tmp/CR10-Firmware
+LOCALREPO=/tmp/CR10-Firmware-$BRANCH
 
 #####################################
 ### DO NOT MODIFY BELOW THIS LINE ###
