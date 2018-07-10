@@ -25,10 +25,12 @@ fi
 
 # disconnect octoprint to allow programmer to connect
 curl -s -H "Content-Type: application/json" -H "X-Api-Key: $YOUR_API_KEY" -X POST -d '{ "command":"disconnect" }' http://octopi.local/api/connection
-sleep 2
+
+# Update PlatformIO packages
+platformio update
 
 # build and upload firmware to CR-10
-pio run -e megaatmega2560 -t upload
+platformio run -e megaatmega2560 -t upload
 
 # re-connect octoprint
 sleep 5
