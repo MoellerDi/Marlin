@@ -1,0 +1,10 @@
+M900 K0.00 ;reset k-factor to zero
+G91
+G1 F1800 E-3
+G1 F3000 Z10
+G90
+G0 X50 Y269 F5000 ;move X/Y so the head is out of the way
+M106 S0 ; turn off cooling fan
+M104 S0 ; turn off extruder
+M140 S0 ; turn off bed
+M84 ; disable motors

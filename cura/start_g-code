@@ -1,0 +1,39 @@
+M117 Preparation...
+M900 K0.00; K1.40 ;set k-factor PETG @ 230
+G21 ;metric values
+G90 ;absolute positioning
+M82 ;set extruder to absolute mode
+M107 ;start with the fan off
+M117 Homing...
+G28 X0 Y0 ;move X/Y to min endstops
+G28 Z0 ;move Z to min endstops
+G1 X150 Y150 Z2 F6000 ;move to wait position
+M117 Pre-Heating Bed...
+M190 R50 ;set bed temp to 50C for pre-heating/cooling and wait
+M117 Waiting...
+G4 S90 ;wait for 90 sec
+M117 Leveling...
+G28 Z0 ;move Z to min endstops
+G29V4 ;execute ABL
+M117 Heating...
+M104 S{material_standby_temperature} ;set extruder temp to material_standby_temperature for pre-heating don't wait
+M140 S{material_bed_temperature_layer_0} ;set bed temp to material_bed_temperature_layer_0 don't wait
+G0 X1 Y1 F3000 ;move to heating position to avoid ooze
+G0 Z0.3 F300 ;move to heating position to avoid ooze
+M190 S{material_bed_temperature_layer_0} ;set bed temp to material_bed_temperature_layer_0 and wait
+M109 S{material_initial_print_temperature} ;set extruder temp to material_initial_print_temperature and wait
+M117 Purge Extruder...
+G92 E0 ;zero the extruded length
+G0 Z1 F300 ;get ready for purging
+G0 Y245 F5000 ;get ready for purging
+G0 Y240 Z0.3 E5 F300 ;get ready for purging
+M104 S{material_print_temperature_layer_0} ;set extruder temp to material_print_temperature_layer_0 don't wait
+G1 Y160 F600 E10 ;purge line part1
+G1 Y60 F1000 E20 ;purge line part2
+G1 Y10 F300 E24 ;purge line part3
+G92 E0 ;zero the extruded length
+G91 ;relative positioning
+G1 E-0.1 F300 ;retract the filament
+G1 Z+0.1 F4200 ;move Z up a bit // E-4 and retract filament
+G90 ;absolute positioning
+M117 Printing...
