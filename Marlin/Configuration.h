@@ -638,7 +638,7 @@
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4]]]]
  */
 //#define DEFAULT_MAX_FEEDRATE          { 500, 500, 5, 25 } //stock values
-#define DEFAULT_MAX_FEEDRATE          { 150, 150, 25, 50 } // testing
+#define DEFAULT_MAX_FEEDRATE          { 150, 150, 25, 25 } // testing
 
 /**
  * Default Max Acceleration (change/s) change = mm/s
@@ -674,7 +674,7 @@
  */
 #define DEFAULT_XJERK                 10.0
 #define DEFAULT_YJERK                 10.0
-#define DEFAULT_ZJERK                  0.3
+#define DEFAULT_ZJERK                  0.4
 #define DEFAULT_EJERK                  5.0
 
 /**
