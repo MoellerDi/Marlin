@@ -1124,11 +1124,11 @@
   #define HOLD_MULTIPLIER    0.5  // Scales down the holding current from run current
   #define INTERPOLATE       true  // Interpolate X/Y/Z_MICROSTEPS to 256
 
-  #define X_CURRENT          900  // rms current in mA. Multiply by 1.41 for peak current.
+  #define X_CURRENT          800  // rms current in mA. Multiply by 1.41 for peak current.
   #define X_MICROSTEPS        16  // 0..256
   #define X_CS_PIN            64  // HD overwrite X_CS_PIN
 
-  #define Y_CURRENT          900
+  #define Y_CURRENT          800
   #define Y_MICROSTEPS        16
   #define Y_CS_PIN            44  // HD overwrite Y_CS_PIN
   #define E1_CS_PIN           -1  // HD overwrite E1_CS_PIN because it's needed for Y_CS_PIN
@@ -1145,7 +1145,7 @@
   //#define Z2_CURRENT         800
   //#define Z2_MICROSTEPS       16
 
-  #define E0_CURRENT         900
+  #define E0_CURRENT         800
   #define E0_MICROSTEPS       16
 
   //#define E1_CURRENT         800
