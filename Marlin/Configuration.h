@@ -382,9 +382,9 @@
   // If you are using a pre-configured hotend then you can use one of the value sets by uncommenting it
 
   //CR-10 Stock Hotend; PSU at 13V (tuned with "M303 E0 S230 C15")
-  #define DEFAULT_Kp 14.77
-  #define DEFAULT_Ki 0.90
-  #define DEFAULT_Kd 60.50
+  #define DEFAULT_Kp 18.07
+  #define DEFAULT_Ki 2.86
+  #define DEFAULT_Kd 28.49
 
   // Ultimaker
   //#define DEFAULT_Kp 22.2
