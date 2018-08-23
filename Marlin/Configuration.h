@@ -641,7 +641,7 @@
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4]]]]
  */
 //#define DEFAULT_MAX_FEEDRATE          { 500, 500, 5, 25 } //stock values
-#define DEFAULT_MAX_FEEDRATE          { 150, 150, 25, 25 } // testing
+#define DEFAULT_MAX_FEEDRATE          { 150, 150, 25, 50 } // testing
 
 /**
  * Default Max Acceleration (change/s) change = mm/s
@@ -664,7 +664,7 @@
  *   M204 T    Travel Acceleration
  */
 #define DEFAULT_ACCELERATION           600    // X, Y, Z and E acceleration for printing moves
-#define DEFAULT_RETRACT_ACCELERATION  1000    // E acceleration for retracts
+#define DEFAULT_RETRACT_ACCELERATION  2000    // E acceleration for retracts
 #define DEFAULT_TRAVEL_ACCELERATION    800    // X, Y, Z acceleration for travel (non printing) moves
 
 /**
