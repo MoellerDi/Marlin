@@ -1235,7 +1235,7 @@
 
   #if ENABLED(SENSORLESS_HOMING)
     #define X_HOMING_SENSITIVITY  3
-    #define Y_HOMING_SENSITIVITY  3
+    #define Y_HOMING_SENSITIVITY  4
     //#define Z_HOMING_SENSITIVITY  8
   #endif
 
