@@ -381,10 +381,15 @@
 
   // If you are using a pre-configured hotend then you can use one of the value sets by uncommenting it
 
+  //e3D V6 Clone; PSU at 13V
+  #define DEFAULT_Kp 16.94
+  #define DEFAULT_Ki 1.32
+  #define DEFAULT_Kd 54.46
+
   //CR-10 Stock Hotend; PSU at 13V (tuned with "M303 E0 S230 C15")
-  #define DEFAULT_Kp 15.44
-  #define DEFAULT_Ki 2.09
-  #define DEFAULT_Kd 28.46
+  //#define DEFAULT_Kp 15.44
+  //#define DEFAULT_Ki 2.09
+  //#define DEFAULT_Kd 28.46
 
   // Ultimaker
   //#define DEFAULT_Kp 22.2
@@ -811,7 +816,7 @@
 #define Z_PROBE_OFFSET_FROM_EXTRUDER 0      // Z offset: -below +above  [the nozzle]
 
 // Certain types of probes need to stay away from edges
-#define MIN_PROBE_EDGE 40
+#define MIN_PROBE_EDGE 10
 
 // X and Y axis travel speed (mm/m) between probes
 #define XY_PROBE_SPEED (150*60)
@@ -910,14 +915,14 @@
 
 // The size of the print bed
 #define X_BED_SIZE 300
-#define Y_BED_SIZE 300
+#define Y_BED_SIZE 250
 
 // Travel limits (mm) after homing, corresponding to endstop positions.
 #define X_MIN_POS 0
-#define Y_MIN_POS 0
+#define Y_MIN_POS -30
 #define Z_MIN_POS 0
-#define X_MAX_POS X_BED_SIZE + 20
-#define Y_MAX_POS Y_BED_SIZE
+#define X_MAX_POS 320
+#define Y_MAX_POS 270
 #define Z_MAX_POS 400
 
 /**
@@ -1054,10 +1059,10 @@
   #define GRID_MAX_POINTS_Y GRID_MAX_POINTS_X
 
   // Set the boundaries for probing (where the probe can reach).
-  #define LEFT_PROBE_BED_POSITION MIN_PROBE_EDGE
-  #define RIGHT_PROBE_BED_POSITION (X_BED_SIZE - MIN_PROBE_EDGE)
-  #define FRONT_PROBE_BED_POSITION MIN_PROBE_EDGE
-  #define BACK_PROBE_BED_POSITION (Y_BED_SIZE - MIN_PROBE_EDGE)
+  //#define LEFT_PROBE_BED_POSITION MIN_PROBE_EDGE
+  //#define RIGHT_PROBE_BED_POSITION (X_MAX_POS - MIN_PROBE_EDGE)
+  //#define FRONT_PROBE_BED_POSITION MIN_PROBE_EDGE
+  //#define BACK_PROBE_BED_POSITION (Y_MAX_POS - MIN_PROBE_EDGE)
 
   // Probe along the Y axis, advancing X after each column
   //#define PROBE_Y_FIRST
