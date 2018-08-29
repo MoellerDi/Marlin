@@ -382,9 +382,9 @@
   // If you are using a pre-configured hotend then you can use one of the value sets by uncommenting it
 
   //e3D V6 Clone; PSU at 13V
-  #define DEFAULT_Kp 16.94
-  #define DEFAULT_Ki 1.32
-  #define DEFAULT_Kd 54.46
+  #define DEFAULT_Kp 16.20
+  #define DEFAULT_Ki 1.34
+  #define DEFAULT_Kd 49.11
 
   //CR-10 Stock Hotend; PSU at 13V (tuned with "M303 E0 S230 C15")
   //#define DEFAULT_Kp 15.44
