@@ -1017,8 +1017,8 @@
  *     But: `M851 Z+1` with a CLEARANCE of 2  =>  2mm from bed to nozzle.
  */
 #define Z_CLEARANCE_DEPLOY_PROBE   10 // Z Clearance for Deploy/Stow
-#define Z_CLEARANCE_BETWEEN_PROBES  5 // Z Clearance between probe points
-#define Z_CLEARANCE_MULTI_PROBE     5 // Z Clearance between multiple probes
+#define Z_CLEARANCE_BETWEEN_PROBES 25 // Z Clearance between probe points
+#define Z_CLEARANCE_MULTI_PROBE    25 // Z Clearance between multiple probes
 #define Z_AFTER_PROBING            30 // Z position after probing is done
 
 #define Z_PROBE_LOW_POINT          -2 // Farthest distance below the trigger-point to go before stopping
@@ -1488,7 +1488,7 @@
 
 #if ENABLED(NOZZLE_PARK_FEATURE)
   // Specify a park position as { X, Y, Z }
-  #define NOZZLE_PARK_POINT { 0, 0, MANUAL_Z_HOME_POS }
+  #define NOZZLE_PARK_POINT { 0, 0, 20 }
   #define NOZZLE_PARK_XY_FEEDRATE 100   // X and Y axes feedrate in mm/s (also used for delta printers Z axis)
   #define NOZZLE_PARK_Z_FEEDRATE 100      // Z axis feedrate in mm/s (not used for delta printers)
 #endif
