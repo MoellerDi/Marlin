@@ -71,7 +71,6 @@
   #include "../feature/leds/leds.h"
 #endif
 
-// For i2c define BUZZ to use lcd_buzz
 #if DISABLED(LCD_USE_I2C_BUZZER)
   #include "../libs/buzzer.h"
 #endif
@@ -1311,22 +1310,46 @@ void lcd_quick_feedback(const bool clear_buttons) {
       void lcd_babystep_zoffset() {
         if (use_click()) { return lcd_goto_previous_menu_no_defer(); }
         defer_return_to_status = true;
+        #if ENABLED(BABYSTEP_HOTEND_Z_OFFSET)
+          const bool do_probe = (active_extruder == 0);
+        #else
+          constexpr bool do_probe = true;
+        #endif
         ENCODER_DIRECTION_NORMAL();
         if (encoderPosition) {
           const int16_t babystep_increment = (int32_t)encoderPosition * (BABYSTEP_MULTIPLICATOR);
           encoderPosition = 0;
 
-          const float new_zoffset = zprobe_zoffset + planner.steps_to_mm[Z_AXIS] * babystep_increment;
-          if (WITHIN(new_zoffset, Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX)) {
+          const float diff = planner.steps_to_mm[Z_AXIS] * babystep_increment,
+                      new_probe_offset = zprobe_zoffset + diff,
+                      new_offs =
+                        #if ENABLED(BABYSTEP_HOTEND_Z_OFFSET)
+                          do_probe ? new_probe_offset : hotend_offset[Z_AXIS][active_extruder] - diff
+                        #else
+                          new_probe_offset
+                        #endif
+                      ;
+          if (WITHIN(new_offs, Z_PROBE_OFFSET_RANGE_MIN, Z_PROBE_OFFSET_RANGE_MAX)) {
+
             thermalManager.babystep_axis(Z_AXIS, babystep_increment);
-            zprobe_zoffset = new_zoffset;
+
+            if (do_probe) zprobe_zoffset = new_offs;
+            #if ENABLED(BABYSTEP_HOTEND_Z_OFFSET)
+              else hotend_offset[Z_AXIS][active_extruder] = new_offs;
+            #endif
+
             lcdDrawUpdate = LCDVIEW_CALL_REDRAW_NEXT;
           }
         }
         if (lcdDrawUpdate) {
-          lcd_implementation_drawedit(PSTR(MSG_ZPROBE_ZOFFSET), ftostr43sign(zprobe_zoffset));
+          #if ENABLED(BABYSTEP_HOTEND_Z_OFFSET)
+            if (do_probe)
+              lcd_implementation_drawedit(PSTR(MSG_ZPROBE_ZOFFSET), ftostr43sign(zprobe_zoffset));
+            else
+              lcd_implementation_drawedit(PSTR(MSG_IDEX_Z_OFFSET), ftostr43sign(hotend_offset[Z_AXIS][active_extruder]));
+          #endif
           #if ENABLED(BABYSTEP_ZPROBE_GFX_OVERLAY)
-            _lcd_zoffset_overlay_gfx(zprobe_zoffset);
+            if (do_probe) _lcd_zoffset_overlay_gfx(zprobe_zoffset);
           #endif
         }
       }
@@ -3674,17 +3697,17 @@ void lcd_quick_feedback(const bool clear_buttons) {
 
     void _lcd_configuration_temperature_preheat_settings_menu(const uint8_t material) {
       #if HOTENDS > 5
-        #define MINTEMP_ALL MIN5(HEATER_0_MINTEMP, HEATER_1_MINTEMP, HEATER_2_MINTEMP, HEATER_3_MINTEMP, HEATER_4_MINTEMP, HEATER_5_MINTEMP)
-        #define MAXTEMP_ALL MAX5(HEATER_0_MAXTEMP, HEATER_1_MAXTEMP, HEATER_2_MAXTEMP, HEATER_3_MAXTEMP, HEATER_4_MAXTEMP, HEATER_5_MAXTEMP)
+        #define MINTEMP_ALL MIN(HEATER_0_MINTEMP, HEATER_1_MINTEMP, HEATER_2_MINTEMP, HEATER_3_MINTEMP, HEATER_4_MINTEMP, HEATER_5_MINTEMP)
+        #define MAXTEMP_ALL MAX(HEATER_0_MAXTEMP, HEATER_1_MAXTEMP, HEATER_2_MAXTEMP, HEATER_3_MAXTEMP, HEATER_4_MAXTEMP, HEATER_5_MAXTEMP)
       #elif HOTENDS > 4
-        #define MINTEMP_ALL MIN5(HEATER_0_MINTEMP, HEATER_1_MINTEMP, HEATER_2_MINTEMP, HEATER_3_MINTEMP, HEATER_4_MINTEMP)
-        #define MAXTEMP_ALL MAX5(HEATER_0_MAXTEMP, HEATER_1_MAXTEMP, HEATER_2_MAXTEMP, HEATER_3_MAXTEMP, HEATER_4_MAXTEMP)
+        #define MINTEMP_ALL MIN(HEATER_0_MINTEMP, HEATER_1_MINTEMP, HEATER_2_MINTEMP, HEATER_3_MINTEMP, HEATER_4_MINTEMP)
+        #define MAXTEMP_ALL MAX(HEATER_0_MAXTEMP, HEATER_1_MAXTEMP, HEATER_2_MAXTEMP, HEATER_3_MAXTEMP, HEATER_4_MAXTEMP)
       #elif HOTENDS > 3
-        #define MINTEMP_ALL MIN4(HEATER_0_MINTEMP, HEATER_1_MINTEMP, HEATER_2_MINTEMP, HEATER_3_MINTEMP)
-        #define MAXTEMP_ALL MAX4(HEATER_0_MAXTEMP, HEATER_1_MAXTEMP, HEATER_2_MAXTEMP, HEATER_3_MAXTEMP)
+        #define MINTEMP_ALL MIN(HEATER_0_MINTEMP, HEATER_1_MINTEMP, HEATER_2_MINTEMP, HEATER_3_MINTEMP)
+        #define MAXTEMP_ALL MAX(HEATER_0_MAXTEMP, HEATER_1_MAXTEMP, HEATER_2_MAXTEMP, HEATER_3_MAXTEMP)
       #elif HOTENDS > 2
-        #define MINTEMP_ALL MIN3(HEATER_0_MINTEMP, HEATER_1_MINTEMP, HEATER_2_MINTEMP)
-        #define MAXTEMP_ALL MAX3(HEATER_0_MAXTEMP, HEATER_1_MAXTEMP, HEATER_2_MAXTEMP)
+        #define MINTEMP_ALL MIN(HEATER_0_MINTEMP, HEATER_1_MINTEMP, HEATER_2_MINTEMP)
+        #define MAXTEMP_ALL MAX(HEATER_0_MAXTEMP, HEATER_1_MAXTEMP, HEATER_2_MAXTEMP)
       #elif HOTENDS > 1
         #define MINTEMP_ALL MIN(HEATER_0_MINTEMP, HEATER_1_MINTEMP)
         #define MAXTEMP_ALL MAX(HEATER_0_MAXTEMP, HEATER_1_MAXTEMP)
@@ -4124,7 +4147,9 @@ void lcd_quick_feedback(const bool clear_buttons) {
     void lcd_config_retract_menu() {
       START_MENU();
       MENU_BACK(MSG_CONTROL);
-      MENU_ITEM_EDIT_CALLBACK(bool, MSG_AUTORETRACT, &fwretract.autoretract_enabled, fwretract.refresh_autoretract);
+      #if ENABLED(FWRETRACT_AUTORETRACT)
+        MENU_ITEM_EDIT_CALLBACK(bool, MSG_AUTORETRACT, &fwretract.autoretract_enabled, fwretract.refresh_autoretract);
+      #endif
       MENU_ITEM_EDIT(float52sign, MSG_CONTROL_RETRACT, &fwretract.retract_length, 0, 100);
       #if EXTRUDERS > 1
         MENU_ITEM_EDIT(float52sign, MSG_CONTROL_RETRACT_SWAP, &fwretract.swap_retract_length, 0, 100);
