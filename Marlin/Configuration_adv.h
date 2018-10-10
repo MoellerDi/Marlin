@@ -907,7 +907,6 @@
 // Moves (or segments) with fewer steps than this will be joined with the next move
 #define MIN_STEPS_PER_SEGMENT 6
 
-
 /**
  * Minimum delay after setting the stepper DIR (in ns)
  *     0 : No delay (Expect at least 10µS since one Stepper ISR must transpire)
@@ -987,12 +986,12 @@
 // Without XON/XOFF flow control (see SERIAL_XON_XOFF below) 32 bytes should be enough.
 // To use flow control, set this buffer size to at least 1024 bytes.
 // :[0, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]
-#define RX_BUFFER_SIZE 128
+//#define RX_BUFFER_SIZE 1024
 
 #if RX_BUFFER_SIZE >= 1024
   // Enable to have the controller send XON/XOFF control characters to
   // the host to signal the RX buffer is becoming full.
-  #define SERIAL_XON_XOFF
+  //#define SERIAL_XON_XOFF
 #endif
 
 #if ENABLED(SDSUPPORT)
@@ -1220,14 +1219,14 @@
   #define Z_CURRENT          600
   #define Z_MICROSTEPS        16
 
-  //#define X2_CURRENT         800
-  //#define X2_MICROSTEPS       16
+  #define X2_CURRENT         800
+  #define X2_MICROSTEPS       16
 
-  //#define Y2_CURRENT         800
-  //#define Y2_MICROSTEPS       16
+  #define Y2_CURRENT         800
+  #define Y2_MICROSTEPS       16
 
-  //#define Z2_CURRENT         800
-  //#define Z2_MICROSTEPS       16
+  #define Z2_CURRENT         800
+  #define Z2_MICROSTEPS       16
 
   #define Z3_CURRENT         800
   #define Z3_MICROSTEPS       16
@@ -1235,17 +1234,17 @@
   #define E0_CURRENT         800
   #define E0_MICROSTEPS       16
 
-  //#define E1_CURRENT         800
-  //#define E1_MICROSTEPS       16
+  #define E1_CURRENT         800
+  #define E1_MICROSTEPS       16
 
-  //#define E2_CURRENT         800
-  //#define E2_MICROSTEPS       16
+  #define E2_CURRENT         800
+  #define E2_MICROSTEPS       16
 
-  //#define E3_CURRENT         800
-  //#define E3_MICROSTEPS       16
+  #define E3_CURRENT         800
+  #define E3_MICROSTEPS       16
 
-  //#define E4_CURRENT         800
-  //#define E4_MICROSTEPS       16
+  #define E4_CURRENT         800
+  #define E4_MICROSTEPS       16
 
   #define E5_CURRENT         800
   #define E5_MICROSTEPS       16
