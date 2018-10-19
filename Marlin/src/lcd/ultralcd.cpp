@@ -778,7 +778,11 @@ void lcd_status_screen() {
 
   #endif // ULTIPANEL
 
-  lcd_implementation_status_screen();
+  #if LCD_INFO_SCREEN_STYLE == 0
+    lcd_impl_status_screen_0();
+  #elif LCD_INFO_SCREEN_STYLE == 1
+    lcd_impl_status_screen_1();
+  #endif
 }
 
 /**
@@ -976,13 +980,16 @@ void lcd_quick_feedback(const bool clear_buttons) {
 
   #endif // POWER_LOSS_RECOVERY
 
-  #if ENABLED(SINGLENOZZLE)
-    void singlenozzle_swap_menu() {
+  #if EXTRUDERS > 1
+    void tool_change_menu() {
       START_MENU();
       MENU_BACK(MSG_MAIN);
-      MENU_ITEM_EDIT(float3, MSG_FILAMENT_SWAP_LENGTH, &sn_settings.swap_length, 0, 200);
-      MENU_MULTIPLIER_ITEM_EDIT(int4, MSG_SINGLENOZZLE_RETRACT_SPD, &sn_settings.retract_speed, 10, 5400);
-      MENU_MULTIPLIER_ITEM_EDIT(int4, MSG_SINGLENOZZLE_PRIME_SPD, &sn_settings.prime_speed, 10, 5400);
+      #if ENABLED(SINGLENOZZLE)
+        MENU_ITEM_EDIT(float3, MSG_FILAMENT_SWAP_LENGTH, &toolchange_settings.swap_length, 0, 200);
+        MENU_MULTIPLIER_ITEM_EDIT(int4, MSG_SINGLENOZZLE_RETRACT_SPD, &toolchange_settings.retract_speed, 10, 5400);
+        MENU_MULTIPLIER_ITEM_EDIT(int4, MSG_SINGLENOZZLE_PRIME_SPD, &toolchange_settings.prime_speed, 10, 5400);
+      #endif
+      MENU_ITEM_EDIT(float3, MSG_TOOL_CHANGE_ZLIFT, &toolchange_settings.z_raise, 0, 10);
       END_MENU();
     }
   #endif
@@ -1911,9 +1918,7 @@ void lcd_quick_feedback(const bool clear_buttons) {
   #endif // HAS_TEMP_HOTEND || HAS_HEATED_BED
 
   void lcd_cooldown() {
-    #if FAN_COUNT > 0
-      for (uint8_t i = 0; i < FAN_COUNT; i++) fan_speed[i] = 0;
-    #endif
+    zero_fan_speeds();
     thermalManager.disable_all_heaters();
     lcd_return_to_status();
   }
@@ -3437,8 +3442,8 @@ void lcd_quick_feedback(const bool clear_buttons) {
     //
     // Set single nozzle filament retract and prime length
     //
-    #if ENABLED(SINGLENOZZLE)
-      MENU_ITEM(submenu, MSG_SINGLENOZZLE_TOOL_CHANGE, singlenozzle_swap_menu);
+    #if EXTRUDERS > 1
+      MENU_ITEM(submenu, MSG_TOOL_CHANGE, tool_change_menu);
     #endif
 
     //
@@ -4216,7 +4221,7 @@ void lcd_quick_feedback(const bool clear_buttons) {
         MENU_ITEM_EDIT(float52sign, MSG_CONTROL_RETRACT_SWAP, &fwretract.settings.swap_retract_length, 0, 100);
       #endif
       MENU_ITEM_EDIT(float3, MSG_CONTROL_RETRACTF, &fwretract.settings.retract_feedrate_mm_s, 1, 999);
-      MENU_ITEM_EDIT(float52sign, MSG_CONTROL_RETRACT_ZLIFT, &fwretract.settings.retract_zlift, 0, 999);
+      MENU_ITEM_EDIT(float52sign, MSG_CONTROL_RETRACT_ZHOP, &fwretract.settings.retract_zraise, 0, 999);
       MENU_ITEM_EDIT(float52sign, MSG_CONTROL_RETRACT_RECOVER, &fwretract.settings.retract_recover_length, -100, 100);
       #if EXTRUDERS > 1
         MENU_ITEM_EDIT(float52sign, MSG_CONTROL_RETRACT_RECOVER_SWAP, &fwretract.settings.swap_retract_recover_length, -100, 100);
