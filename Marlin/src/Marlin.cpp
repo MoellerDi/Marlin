@@ -42,6 +42,8 @@
 #include "module/printcounter.h" // PrintCounter or Stopwatch
 #include "feature/closedloop.h"
 
+#include "HAL/shared/Delay.h"
+
 #ifdef ARDUINO
   #include <pins_arduino.h>
 #endif
@@ -417,7 +419,7 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
     // ---------------------------------------------------------
     static int homeDebounceCount = 0;   // poor man's debouncing count
     const int HOME_DEBOUNCE_DELAY = 2500;
-    if (!IS_SD_PRINTING && !READ(HOME_PIN)) {
+    if (!IS_SD_PRINTING() && !READ(HOME_PIN)) {
       if (!homeDebounceCount) {
         enqueue_and_echo_commands_P(PSTR("G28"));
         LCD_MESSAGEPGM(MSG_AUTO_HOME);
@@ -610,11 +612,10 @@ void idle(
  * After this the machine will need to be reset.
  */
 void kill(PGM_P const lcd_msg/*=NULL*/) {
+  thermalManager.disable_all_heaters();
+
   SERIAL_ERROR_START();
   SERIAL_ERRORLNPGM(MSG_ERR_KILLED);
-
-  thermalManager.disable_all_heaters();
-  disable_all_steppers();
 
   #if ENABLED(EXTENSIBLE_UI)
     UI::onPrinterKilled(lcd_msg ? lcd_msg : PSTR(MSG_KILLED));
@@ -633,9 +634,13 @@ void kill(PGM_P const lcd_msg/*=NULL*/) {
 
 void minkill() {
 
-  _delay_ms(600); // Wait a short time (allows messages to get out before shutting down.
+  // Wait a short time (allows messages to get out before shutting down.
+  DELAY_US(600000);
+
   cli(); // Stop interrupts
-  _delay_ms(250); // Wait to ensure all interrupts stopped
+
+  // Wait to ensure all interrupts stopped
+  DELAY_US(250000);
 
   thermalManager.disable_all_heaters(); // turn off heaters again
 
@@ -971,11 +976,8 @@ void loop() {
 
     #if ENABLED(SDSUPPORT)
       card.checkautostart();
-    #endif
 
-    #if ENABLED(SDSUPPORT) && (ENABLED(ULTIPANEL) || ENABLED(EXTENSIBLE_UI))
-      if (abort_sd_printing) {
-        abort_sd_printing = false;
+      if (card.abort_sd_printing) {
         card.stopSDPrint(
           #if SD_RESORT
             true
@@ -991,7 +993,7 @@ void loop() {
           card.removeJobRecoveryFile();
         #endif
       }
-    #endif // SDSUPPORT && (ENABLED(ULTIPANEL) || ENABLED(EXTENSIBLE_UI))
+    #endif // SDSUPPORT
 
     if (commands_in_queue < BUFSIZE) get_available_commands();
     advance_command_queue();
