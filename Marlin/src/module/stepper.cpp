@@ -1746,10 +1746,10 @@ uint32_t Stepper::stepper_block_phase_isr() {
           #endif
       ) {
         last_direction_bits = current_block->direction_bits;
-        set_directions();
         #if EXTRUDERS > 1
           last_moved_extruder = stepper_extruder;
         #endif
+        set_directions();
       }
 
       // At this point, we must ensure the movement about to execute isn't
@@ -2088,6 +2088,7 @@ void Stepper::init() {
 
   endstops.enable(true); // Start with endstops active. After homing they can be disabled
   sei();
+  set_directions(); // Init directions to last_direction_bits = 0  Keeps Z from being reversed
 }
 
 /**

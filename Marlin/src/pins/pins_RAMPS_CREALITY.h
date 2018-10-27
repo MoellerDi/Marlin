@@ -2,6 +2,9 @@
  * Marlin 3D Printer Firmware
  * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
+ * Based on Sprinter and grbl.
+ * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -16,20 +19,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#pragma once
 
-/**
- * Define SPI Pins: SCK, MISO, MOSI, SS
- */
-#ifndef SCK_PIN
-  #define SCK_PIN   PA5
+#if HOTENDS > 2 || E_STEPPERS > 2
+  #error "Creality3D RAMPS supports only 2 hotends / E-steppers. Comment out this line to continue."
 #endif
-#ifndef MISO_PIN
-  #define MISO_PIN  PA6
-#endif
-#ifndef MOSI_PIN
-  #define MOSI_PIN  PA7
-#endif
-#ifndef SS_PIN
-  #define SS_PIN    PA8
-#endif
+
+#define BOARD_NAME "Creality3D RAMPS"
+
+//
+// Heaters / Fans
+//
+
+// Power outputs EFBF or EFBE
+#define MOSFET_D_PIN 7
+
+#define FIL_RUNOUT_PIN 2
+
+#include "pins_RAMPS.h"
+
+#define EXP1_PIN 65   // A11
+#define EXP2_PIN 66   // A12
+#define EXP3_PIN 11   // SERVO0_PIN
+#define EXP4_PIN 12   // PS_ON_PIN

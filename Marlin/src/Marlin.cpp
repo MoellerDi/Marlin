@@ -617,9 +617,7 @@ void kill(PGM_P const lcd_msg/*=NULL*/) {
   SERIAL_ERROR_START();
   SERIAL_ERRORLNPGM(MSG_ERR_KILLED);
 
-  #if ENABLED(EXTENSIBLE_UI)
-    UI::onPrinterKilled(lcd_msg ? lcd_msg : PSTR(MSG_KILLED));
-  #elif ENABLED(ULTRA_LCD)
+  #if ENABLED(ULTRA_LCD) || ENABLED(EXTENSIBLE_UI)
     kill_screen(lcd_msg ? lcd_msg : PSTR(MSG_KILLED));
   #else
     UNUSED(lcd_msg);
@@ -635,12 +633,12 @@ void kill(PGM_P const lcd_msg/*=NULL*/) {
 void minkill() {
 
   // Wait a short time (allows messages to get out before shutting down.
-  for (uint8_t i = 100; i--;) DELAY_US(6000);
+  for (int i = 1000; i--;) DELAY_US(600);
 
   cli(); // Stop interrupts
 
   // Wait to ensure all interrupts stopped
-  for (uint8_t i = 100; i--;) DELAY_US(2500);
+  for (int i = 1000; i--;) DELAY_US(250);
 
   thermalManager.disable_all_heaters(); // turn off heaters again
 
