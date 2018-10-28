@@ -1377,10 +1377,7 @@
    *   stepperE0.stealthChop(0); \
    * }
    */
-  #define TMC_ADV() { \
-    stepperZ.stealthChop(0);  \
-    stepperE0.stealthChop(0); \
-  }
+  #define TMC_ADV() {  }
 
 #endif // HAS_TRINAMIC
 
