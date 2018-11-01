@@ -1393,8 +1393,8 @@
    * #define TMC_ADV() { \
    *   stepperX.diag0_temp_prewarn(1); \
    *   stepperY.interpolate(0); \
-   *   stepperZ.stealthChop(0);  \
-   *   stepperE0.stealthChop(0); \
+   *   stepperZ.en_pwm_mode(0);  \
+   *   stepperE0.en_pwm_mode(0); \
    * }
    */
   #define TMC_ADV() {  }
