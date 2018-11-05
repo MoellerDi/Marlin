@@ -25,13 +25,13 @@ M190 S{material_bed_temperature_layer_0} ;set bed temperature to material_bed_te
 M109 S{material_initial_print_temperature, 0} ;set extruder temperature to material_initial_print_temperature and wait
 M117 Purge Extruder...
 G92 E0 ;zero the extruded length
-G0 Y2 X1 Z0.3 E5 F300 ;get ready for purging
+G0 Y2 X1 Z0.3 E2 F300 ;get ready for purging
 M104 S{material_print_temperature_layer_0, 0} ;set extruder temperature to material_print_temperature_layer_0 don't wait
-G1 Y40 F600 E10 ;purge line part1
-G1 Y150 F1000 E20 ;purge line part3
+G1 Y50 F600 E5 ;purge line part1
+G1 Y150 F1000 E10 ;purge line part3
 G1 Y150 X1.5
-G1 Y50 F1000 E30 ;purge line part4
-G1 Y10 F600 E35 ;purge line part5
+G1 Y50 F1000 E15 ;purge line part4
+G1 Y10 F600 E20 ;purge line part5
 G92 E0 ;zero the extruded length
 G91 ;relative positioning
 G1 E-0.0 F300 ;retract the filament
