@@ -7,7 +7,7 @@ YOUR_API_KEY= <add your own api key here>
 REPOSRC=https://github.com/MoellerDi/Marlin.git
 BRANCH=bugfix-2.0.x-HD-TronxyX5S
 
-LOCALREPO=/tmp/CR10-Firmware-$BRANCH
+LOCALREPO=/tmp/TronxyX5S-Firmware-$BRANCH
 
 #####################################
 ### DO NOT MODIFY BELOW THIS LINE ###
