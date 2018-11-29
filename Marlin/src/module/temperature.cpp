@@ -1922,7 +1922,7 @@ void Temperature::isr() {
     ;
 
     /**
-     * Standard PWM modulation
+     * Standard heater PWM modulation
      */
     if (pwm_count_tmp >= 127) {
       pwm_count_tmp -= 127;
@@ -2607,7 +2607,7 @@ void Temperature::isr() {
       #define MIN_COOLING_SLOPE_TIME_BED 60
     #endif
 
-    bool Temperature::wait_for_bed(const bool no_wait_for_cooling
+    bool Temperature::wait_for_bed(const bool no_wait_for_cooling/*=true*/
       #if G26_CLICK_CAN_CANCEL
         , const bool click_to_cancel/*=false*/
       #endif
