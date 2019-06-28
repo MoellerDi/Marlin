@@ -1,0 +1,39 @@
+; ##########################
+; >>> Cura stop g-code >>>
+; ##########################
+
+M400 ;wait for moves to finish
+
+M117 Parking
+G92 E0 ;zero extruded length
+G1 E-{retraction_amount} F10000
+G27 P2 ;Park the nozzle at parking position; never going over the machine’s limit
+
+M117 E to storage position
+;G92 E0          ;zero extruded length
+G1 E-5 F10000   ;stage 1 of 3 (retract to -5)
+G92 E0          ;zero extruded length
+G1 E2 F10000    ;stage 2 of 3 (move forward from -5 to -3)
+G92 E0          ;zero extruded length
+G1 E-747 F10000 ;stage 3 of 3 (move to storage position E-150)
+G92 E0          ;zero extruded length
+
+M400 ;wait for moves to finish
+
+M117 Turn off extruder
+M106 S0 ;turn off cooling fan
+M104 S0 ;turn off extruder
+M140 S0 ;turn off bed
+
+M117 Finished
+M900 K0.00    ;reset k-factor; Linear Advance disabled
+M900 K0.00 T0 ;reset k-factor; Linear Advance disabled
+M900 K0.00 T1 ;reset k-factor; Linear Advance disabled
+;M150 R0 U50 B0 ;set Neopixel to green color
+
+M84 ;disable motors
+M77 ;Stop the print job timer
+
+; ##########################
+; <<< Cura stop g-code <<<
+; ##########################

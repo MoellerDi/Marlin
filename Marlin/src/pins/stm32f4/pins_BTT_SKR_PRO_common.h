@@ -35,7 +35,12 @@
 // Use one of these or SDCard-based Emulation will be used
 #if NO_EEPROM_SELECTED
   //#define SRAM_EEPROM_EMULATION                 // Use BackSRAM-based EEPROM emulation
-  #define FLASH_EEPROM_EMULATION                  // Use Flash-based EEPROM emulation
+  //#define FLASH_EEPROM_EMULATION                  // Use Flash-based EEPROM emulation
+
+  #define I2C_EEPROM                              // Use external EEPROM Module (e.g. AT24C256) connected to I2C Pins 
+  #ifdef I2C_EEPROM                               // as outlined at "https://www.instructables.com/id/BigTreeTech-SKR-Pro-V11-Adding-a-EEPROM/"
+    #define MARLIN_EEPROM_SIZE 0x8000             // 32kB (AT24C256)
+  #endif
 #endif
 
 #if ENABLED(FLASH_EEPROM_EMULATION)
@@ -229,10 +234,14 @@
 //
 // Temperature Sensors
 //
+#define TEMP_BED_PIN                        PF3   // T0 <-> Bed
 #define TEMP_0_PIN                          PF4   // T1 <-> E0
 #define TEMP_1_PIN                          PF5   // T2 <-> E1
-#define TEMP_2_PIN                          PF6   // T3 <-> E2
-#define TEMP_BED_PIN                        PF3   // T0 <-> Bed
+#if TEMP_SENSOR_CHAMBER > 0
+  #define TEMP_CHAMBER_PIN                  PF6   // T3 <-> Chamber
+#else
+  #define TEMP_2_PIN                        PF6   // T3 <-> E2
+#endif
 
 //
 // Heaters / Fans

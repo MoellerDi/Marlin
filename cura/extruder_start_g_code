@@ -1,0 +1,12 @@
+; ##################################
+; >>> Cura extruder start g-code >>>
+; ##################################
+
+;M117 E from storage position
+G92 E0         ;zero extruded length
+G1 F10000 E750 ;return from storage position
+G92 E0         ;zero extruded length
+
+; ##################################
+; <<< Cura extruder start g-code <<<
+; ##################################
