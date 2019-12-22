@@ -103,7 +103,11 @@
 #define TEMP_BED_PIN                    P0_23_A0  // A0 (TH1)
 #define TEMP_0_PIN                      P0_24_A1  // A1 (TH2)
 #define TEMP_1_PIN                      P0_25_A2  // A2 (TH3)
-#define TEMP_2_PIN                      P0_26_A3  // A3 (TH4)
+#if TEMP_SENSOR_CHAMBER > 0
+  #define TEMP_CHAMBER_PIN              P0_26_A3  // A3 (TH4)
+#else
+  #define TEMP_2_PIN                    P0_26_A3  // A3 (TH4)
+#endif
 
 //
 // Heaters / Fans
