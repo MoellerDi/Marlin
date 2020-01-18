@@ -1,6 +1,7 @@
 ; ##########################
 ; >>> Cura start g-code >>>
 ; ##########################
+; nozzle size: {machine_nozzle_size}
 
 M117 Preparation...
 
@@ -58,7 +59,7 @@ G29 A ;activate bed leveling
 
 M117 Heating...
 M140 S{material_bed_temperature_layer_0} ;set bed temperature to material_bed_temperature_layer_0 don't wait
-G1 X10 Y1 F3000 ;move XY to heating position
+G1 X1 Y1 F3000 ;move XY to heating position
 G1 Z0.1 F300 ;move Z to heating position
 M190 S{material_bed_temperature_layer_0} ;set bed temperature to material_bed_temperature_layer_0 and wait
 M109 S{material_initial_print_temperature, 0} ;set hotend temperature to material_initial_print_temperature and wait
@@ -71,15 +72,24 @@ M117 Waiting... (10sec)
 G4 S10 ;wait 10sec
 
 M117 Purge Nozzle...
+;
+; nozzle-size * line-length * layer-height = volume
+; 0.4 * 50 * 0.3 = 6 mm^3
+;
+; 3.14 * filament-radius * filament-radius = mm^3/mm
+; 3.14 * 0.875 * 0.875 = 2.4 mm^3/mm
+;
+; 6 mm^3 / 2.4 mm^3/mm = 2.496 mm
+;
 M104 S{material_print_temperature_layer_0, 0} ;set hotend temperature to material_print_temperature_layer_0 don't wait
 G92 E0 ;zero extruded length
-G1 Y2 Z0.3 E5 F300 ;get ready for purging
+G1 Y2 Z0.3 E{retraction_amount} F300 ;get ready for purging
 G91 ;relative positioning
-G1 F600  Y+48  E+2.5 ;  48mm intro line @ 0.40
-G1 F1000 Y+100 E+5.2 ; 100mm intro line @ 0.40
-G1 F1000 X+0.4       ; get ready for 2nd intro line
-G1 F1000 Y-100 E+2.9 ; 100mm intro line @ 0.30
-G1 F600  Y-40  E+1.2 ;  40mm intro line @ 0.30
+G1 F600  Y+50 E+2.5 ; 50mm intro line (slow)
+G1 F1000 Y+50 E+2.5 ; 50mm intro line (normal)
+G1 F1000 X+{machine_nozzle_size} ; get ready for 2nd intro line
+G1 F1000 Y-50 E+2.6 ; 50mm intro line (normal)
+G1 F600  Y-50 E+2.4 ; 40mm intro line (slow)
 G90 ;absolute positioning
 G92 E0 ;zero extruded length
 

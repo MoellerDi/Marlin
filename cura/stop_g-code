@@ -4,11 +4,6 @@
 
 M400 ;wait for moves to finish
 
-;G91 ;relative positioning
-;G1 F1800 E-1
-;G1 F3000 Z+1 E-4
-;G90 ;absolute positioning
-
 M106 S0 ;turn off cooling fan
 M104 S0 ;turn off extruder
 M140 S0 ;turn off bed
@@ -16,6 +11,8 @@ M140 S0 ;turn off bed
 G27 P2 ;Park the nozzle at the given XYZ defined position so the head is out of the way; never going over the machine’s limit
 M84 ;disable motors
 M900 K0.00 ;reset k-factor; Linear Advance disabled
+
+M150 R0 U50 B0 ;set Neopixel to green color
 
 ; ##########################
 ; <<< Cura start g-code <<<
