@@ -1653,6 +1653,12 @@
   //#define WATCHDOG_RESET_MANUAL
 #endif
 
+
+#define DITHERING
+#if ENABLED(DITHERING)
+  #define BABYSTEPPING //dither requires babystepping
+#endif
+
 // @section lcd
 
 /**
