@@ -2332,7 +2332,7 @@
   #define INTERPOLATE      true
 
   #if AXIS_IS_TMC(X)
-    #define X_CURRENT       700       // (mA) RMS current. Multiply by 1.414 for peak current.
+    #define X_CURRENT       600       // (mA) RMS current. Multiply by 1.414 for peak current.
     #define X_CURRENT_HOME  X_CURRENT // (mA) RMS current for sensorless homing
     #define X_MICROSTEPS     32       // 0..256
     #define X_RSENSE          0.075   // TMC5160 => 0.075 // TMC2130 => 0.11
@@ -2350,7 +2350,7 @@
   #endif
 
   #if AXIS_IS_TMC(Y)
-    #define Y_CURRENT       700
+    #define Y_CURRENT       600
     #define Y_CURRENT_HOME  Y_CURRENT
     #define Y_MICROSTEPS     32
     #define Y_RSENSE          0.075   // TMC5160
@@ -2405,7 +2405,7 @@
 
   #if AXIS_IS_TMC(E0)
     #define E0_CURRENT      500
-    #define E0_MICROSTEPS    16
+    #define E0_MICROSTEPS    32
     #define E0_RSENSE         0.11    // TMC2130
     #define E0_CHAIN_POS     -1
     //#define E0_INTERPOLATE true
@@ -2413,7 +2413,7 @@
 
   #if AXIS_IS_TMC(E1)
     #define E1_CURRENT      500
-    #define E1_MICROSTEPS    16
+    #define E1_MICROSTEPS    32
     #define E1_RSENSE         0.11    // TMC2130
     #define E1_CHAIN_POS     -1
     //#define E1_INTERPOLATE true
@@ -2710,6 +2710,14 @@
     stepperE1.toff(3);                      \
     stepperE1.hend(-1 + 3);                 \
     stepperE1.hstrt(5 - 1);                 \
+/*  chopper timing for X - 0.9 17HM19-2004S */ \
+    stepperX.toff(3);                      \
+    stepperX.hend(-1 + 3);                 \
+    stepperX.hstrt(5 - 1);                 \
+/*  chopper timing for Y - 0.9 17HM19-2004S */ \
+    stepperY.toff(3);                      \
+    stepperY.hend(-1 + 3);                 \
+    stepperY.hstrt(5 - 1);                 \
   }
 
 #endif // HAS_TRINAMIC_CONFIG
