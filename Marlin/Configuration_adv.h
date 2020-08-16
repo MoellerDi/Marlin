@@ -2323,7 +2323,7 @@
  */
 #if HAS_TRINAMIC_CONFIG
 
-  #define HOLD_MULTIPLIER    0.5      // Scales down the holding current from run current
+  #define HOLD_MULTIPLIER    1.0      // Scales down the holding current from run current
 
   /**
    * Interpolate microsteps to 256
@@ -2404,7 +2404,7 @@
   #endif
 
   #if AXIS_IS_TMC(E0)
-    #define E0_CURRENT      700
+    #define E0_CURRENT      500
     #define E0_MICROSTEPS    16
     #define E0_RSENSE         0.075   // TMC5160
     #define E0_CHAIN_POS     -1
@@ -2412,7 +2412,7 @@
   #endif
 
   #if AXIS_IS_TMC(E1)
-    #define E1_CURRENT      700
+    #define E1_CURRENT      500
     #define E1_MICROSTEPS    16
     #define E1_RSENSE         0.075   // TMC5160
     #define E1_CHAIN_POS     -1
@@ -2697,11 +2697,19 @@
    *   stepperY.intpol(0); \
    * }
    */
-  #define TMC_ADV() {                     \
-/*  stepperX.hold_multiplier(1.0); */     \
-    stepperX.rms_current(X_CURRENT, 1.0); \
-/*  stepperY.hold_multiplier(1.0); */     \
-    stepperY.rms_current(Y_CURRENT, 1.0); \
+  #define TMC_ADV() {                       \
+/*  stepperX.hold_multiplier(1.0); */       \
+    stepperE0.rms_current(E0_CURRENT, 0.5); \
+/*  stepperY.hold_multiplier(1.0); */       \
+    stepperE1.rms_current(E1_CURRENT, 0.5); \
+/*  chopper timing for E0 - 0.9 Pancake LDO-42STH25-1404MAC */ \
+    stepperE0.toff(3);                      \
+    stepperE0.hend(-1 + 3);                 \
+    stepperE0.hstrt(5 - 1);                 \
+/*  chopper timing for E1 - 0.9 Pancake LDO-42STH25-1404MAC */ \
+    stepperE1.toff(3);                      \
+    stepperE1.hend(-1 + 3);                 \
+    stepperE1.hstrt(5 - 1);                 \
   }
 
 #endif // HAS_TRINAMIC_CONFIG

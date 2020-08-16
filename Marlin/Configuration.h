@@ -741,15 +741,15 @@
  * Override with M92
  *                                      X, Y, Z, E0 [, E1[, E2...]]
  */
-#define DEFAULT_AXIS_STEPS_PER_UNIT   { 200, 200, 400, 408, 424 } // @ 32, 32, 16, 16, 16 microsteps
+#define DEFAULT_AXIS_STEPS_PER_UNIT   { 200, 200, 400, 825, 825 } // @ 32, 32, 16, 16, 16 microsteps
 
 /**
  * Default Max Feed Rate (mm/s)
  * Override with M203
  *                                      X, Y, Z, E0 [, E1[, E2...]]
  */
-#define DEFAULT_MAX_FEEDRATE          {  300,  300,  15,   50 }
-//                   ....(in steps/s)  60000 60000 6000 20000
+#define DEFAULT_MAX_FEEDRATE          {  200,  200,  15,   50 }
+//                   ....(in steps/s)  40000 40000 6000 41250
 
 //#define LIMITED_MAX_FR_EDITING        // Limit edit via M203 or LCD to DEFAULT_MAX_FEEDRATE * 2
 #if ENABLED(LIMITED_MAX_FR_EDITING)
@@ -1134,7 +1134,7 @@
 
 // For direct drive extruder v9 set to true, for geared extruder set to false.
 #define INVERT_E0_DIR true
-#define INVERT_E1_DIR true
+#define INVERT_E1_DIR false
 #define INVERT_E2_DIR false
 #define INVERT_E3_DIR false
 #define INVERT_E4_DIR false
