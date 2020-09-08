@@ -3319,7 +3319,7 @@
  *
  * Execute certain G-code commands immediately after power-on.
  */
-#define STARTUP_COMMANDS "M150 R150 U150 B150"
+#define STARTUP_COMMANDS "M150 R50 U150 B150 P50"
 
 /**
  * G-code Macros

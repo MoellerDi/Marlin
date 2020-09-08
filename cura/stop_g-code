@@ -31,7 +31,8 @@ M117 Finished
 M900 K0.00    ;reset k-factor; Linear Advance disabled
 M900 K0.00 T0 ;reset k-factor; Linear Advance disabled
 M900 K0.00 T1 ;reset k-factor; Linear Advance disabled
-;M150 R0 U50 B0 ;set Neopixel to green color
+
+M150 R0 U250 B0 P50 ;set Neopixel to green color
 
 M84 ;disable motors
 M77 ;Stop the print job timer

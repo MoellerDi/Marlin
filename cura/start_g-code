@@ -9,7 +9,7 @@
 
 M117 Preparation...
 
-;M150 R150 U150 B150 ;set Neopixel to printing color
+M150 R150 U150 B150 P150 ;set Neopixel to printing color
 
 ; Linear Advance Coefficient (experimental)
 ; turn off coasting in Cura !!!
