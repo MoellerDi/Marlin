@@ -2559,15 +2559,15 @@
    * { <off_time[1..15]>, <hysteresis_end[-3..12]>, hysteresis_start[1..8] }
    */
   #define CHOPPER_TIMING CHOPPER_DEFAULT_24V        // All axes (override below)
-  //#define CHOPPER_TIMING_X  CHOPPER_DEFAULT_12V   // For X Axes (override below)
+  #define CHOPPER_TIMING_X  CHOPPER_09STEP_24V      // For X Axes (override below)
   //#define CHOPPER_TIMING_X2 CHOPPER_DEFAULT_12V
-  //#define CHOPPER_TIMING_Y  CHOPPER_DEFAULT_12V   // For Y Axes (override below)
+  #define CHOPPER_TIMING_Y  CHOPPER_09STEP_24V      // For Y Axes (override below)
   //#define CHOPPER_TIMING_Y2 CHOPPER_DEFAULT_12V
   //#define CHOPPER_TIMING_Z  CHOPPER_DEFAULT_12V   // For Z Axes (override below)
   //#define CHOPPER_TIMING_Z2 CHOPPER_DEFAULT_12V
   //#define CHOPPER_TIMING_Z3 CHOPPER_DEFAULT_12V
   //#define CHOPPER_TIMING_Z4 CHOPPER_DEFAULT_12V
-  //#define CHOPPER_TIMING_E  CHOPPER_DEFAULT_12V   // For Extruders (override below)
+  #define CHOPPER_TIMING_E  CHOPPER_09STEP_24V      // For Extruders (override below)
   //#define CHOPPER_TIMING_E1 CHOPPER_DEFAULT_12V
   //#define CHOPPER_TIMING_E2 CHOPPER_DEFAULT_12V
   //#define CHOPPER_TIMING_E3 CHOPPER_DEFAULT_12V
@@ -2703,21 +2703,21 @@
 /*  stepperY.hold_multiplier(1.0); */       \
     stepperE1.rms_current(E1_CURRENT, 0.5); \
 /*  chopper timing for E0 - 0.9 Pancake LDO-42STH25-1404MAC */ \
-    stepperE0.toff(3);                      \
-    stepperE0.hend(-1 + 3);                 \
-    stepperE0.hstrt(5 - 1);                 \
+/*  stepperE0.toff(3); */                   \
+/*  stepperE0.hend(-1 + 3); */              \
+/*  stepperE0.hstrt(5 - 1); */              \
 /*  chopper timing for E1 - 0.9 Pancake LDO-42STH25-1404MAC */ \
-    stepperE1.toff(3);                      \
-    stepperE1.hend(-1 + 3);                 \
-    stepperE1.hstrt(5 - 1);                 \
+/*  stepperE1.toff(3); */                   \
+/*  stepperE1.hend(-1 + 3); */              \
+/*  stepperE1.hstrt(5 - 1); */              \
 /*  chopper timing for X - 0.9 17HM19-2004S */ \
-    stepperX.toff(3);                      \
-    stepperX.hend(-1 + 3);                 \
-    stepperX.hstrt(5 - 1);                 \
+/*  stepperX.toff(3); */                   \
+/*  stepperX.hend(-1 + 3); */              \
+/*  stepperX.hstrt(5 - 1); */              \
 /*  chopper timing for Y - 0.9 17HM19-2004S */ \
-    stepperY.toff(3);                      \
-    stepperY.hend(-1 + 3);                 \
-    stepperY.hstrt(5 - 1);                 \
+/*  stepperY.toff(3); */                   \
+/*  stepperY.hend(-1 + 3); */              \
+/*  stepperY.hstrt(5 - 1); */              \
   }
 
 #endif // HAS_TRINAMIC_CONFIG
