@@ -32,9 +32,7 @@
 #include "../../sd/cardreader.h"
 
 #if ENABLED(DITHERING)
-  #include "../../module/stepper.h"
   #include "../../feature/dither.h"
-  extern Dithering Dither;
 #endif
 
 #if ENABLED(NANODLP_Z_SYNC)
@@ -114,8 +112,7 @@ void GcodeSuite::G0_G1(TERN_(HAS_FAST_MOVES, const bool fast_move/*=false*/)) {
 	
 	#if ENABLED(DITHERING)
       if (parser.seenval('Z')) {
-        planner.synchronize();
-        Dither.Handle(parser.value_linear_units());
+        dithering.Handle(parser.value_linear_units());
       }
     #endif
 

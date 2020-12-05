@@ -26,7 +26,6 @@
 
 #if ENABLED(DITHERING)
   #include "../../feature/dither.h"
-  extern Dithering Dither;
 #endif
 
 #if DISABLED(NO_VOLUMETRICS)
@@ -178,8 +177,8 @@ void GcodeSuite::M205() {
   if (parser.seen('T')) planner.settings.min_travel_feedrate_mm_s = parser.value_linear_units();
 
   #if ENABLED(DITHERING)
-    if (parser.seen('D')) {Dither.Amplitude = parser.value_linear_units(); Dither.CalculateParameters(); SERIAL_ECHOLNPAIR("Dither Amplitude: ", Dither.Amplitude);};
-    if (parser.seen('H')) {Dither.MinLayerInterval = (parser.value_linear_units()); Dither.CalculateParameters(); SERIAL_ECHOLNPAIR("Dither MinLayerHeight: ", Dither.MinLayerInterval);};
+    if (parser.seen('D')) {dithering.Amplitude = parser.value_linear_units(); dithering.CalculateParameters(); SERIAL_ECHOLNPAIR("Dither Amplitude: ", dithering.Amplitude);};
+    if (parser.seen('H')) {dithering.MinLayerInterval = (parser.value_linear_units()); dithering.CalculateParameters(); SERIAL_ECHOLNPAIR("Dither MinLayerHeight: ", dithering.MinLayerInterval);};
   #endif
 
   #if HAS_JUNCTION_DEVIATION
