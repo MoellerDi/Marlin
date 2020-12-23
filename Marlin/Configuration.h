@@ -1728,7 +1728,7 @@
  *   M76 - Pause the print job timer
  *   M77 - Stop the print job timer
  */
-//#define PRINTJOB_TIMER_AUTOSTART
+#define PRINTJOB_TIMER_AUTOSTART
 
 /**
  * Print Counter
