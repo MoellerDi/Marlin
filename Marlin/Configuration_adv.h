@@ -2410,7 +2410,7 @@
   #endif
 
   #if AXIS_IS_TMC(E0)
-    #define E0_CURRENT      500
+    #define E0_CURRENT      550
     #define E0_MICROSTEPS    32
     #define E0_RSENSE         0.11    // TMC2130
     #define E0_CHAIN_POS     -1
@@ -2418,7 +2418,7 @@
   #endif
 
   #if AXIS_IS_TMC(E1)
-    #define E1_CURRENT      500
+    #define E1_CURRENT      550
     #define E1_MICROSTEPS    32
     #define E1_RSENSE         0.11    // TMC2130
     #define E1_CHAIN_POS     -1
