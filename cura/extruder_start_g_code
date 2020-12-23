@@ -2,10 +2,14 @@
 ; >>> Cura extruder start g-code >>>
 ; ##################################
 
+M400 ;Finish Moves
+
 ;M117 E from storage position
 G92 E0         ;zero extruded length
 G1 F10000 E750 ;return from storage position
 G92 E0         ;zero extruded length
+
+M400 ;Finish Moves
 
 ; ##################################
 ; <<< Cura extruder start g-code <<<
